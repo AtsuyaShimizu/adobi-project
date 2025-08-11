@@ -21,6 +21,9 @@ import { Task } from '../../../domain/model/task';
 export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
   @ViewChild('chartArea') private chartArea?: ElementRef<HTMLDivElement>;
+  @ViewChild('taskArea') private taskArea?: ElementRef<HTMLDivElement>;
+
+  protected readonly emptyRows = Array.from({ length: 100 });
 
   private readonly today: Date = new Date();
 
@@ -29,7 +32,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     start.setHours(0, 0, 0, 0);
 
     let startTime = start.getTime();
-    let endTime = this.addDays(start, 30).getTime();
+    let endTime = this.addDays(start, 365).getTime();
 
     if (this.tasks.length > 0) {
       const taskStart = Math.min(...this.tasks.map(t => t.start.getTime()));
@@ -74,6 +77,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
 
   ngAfterViewInit(): void {
     this.scrollToToday();
+    this.setupScrollSync();
   }
 
   ngOnChanges(): void {
@@ -90,6 +94,15 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     }
     const dayWidth = 38; // cell width + border
     this.chartArea.nativeElement.scrollLeft = index * dayWidth;
+  }
+
+  private setupScrollSync(): void {
+    if (!this.chartArea || !this.taskArea) {
+      return;
+    }
+    this.chartArea.nativeElement.addEventListener('scroll', () => {
+      this.taskArea!.nativeElement.scrollTop = this.chartArea!.nativeElement.scrollTop;
+    });
   }
 
   private isSameDay(a: Date, b: Date): boolean {

@@ -1,5 +1,5 @@
 <div class="gantt-container">
-  <div class="task-area">
+  <div class="task-area" #taskArea>
     <table class="task-table">
       <thead>
         <tr>
@@ -26,15 +26,17 @@
             </tr>
           }
         } @else {
-          <tr>
-            <td class="type-col"></td>
-            <td class="name-col"></td>
-            <td class="detail-col"></td>
-            <td class="assignee-col"></td>
-            <td class="start-col"></td>
-            <td class="end-col"></td>
-            <td class="progress-col"></td>
-          </tr>
+          @for (row of emptyRows; track $index) {
+            <tr>
+              <td class="type-col"></td>
+              <td class="name-col"></td>
+              <td class="detail-col"></td>
+              <td class="assignee-col"></td>
+              <td class="start-col"></td>
+              <td class="end-col"></td>
+              <td class="progress-col"></td>
+            </tr>
+          }
         }
       </tbody>
     </table>
@@ -63,11 +65,13 @@
             </tr>
           }
         } @else {
-          <tr>
-            @for (date of dateRange; track $index) {
-              <td class="day"></td>
-            }
-          </tr>
+          @for (row of emptyRows; track $index) {
+            <tr>
+              @for (date of dateRange; track $index) {
+                <td class="day"></td>
+              }
+            </tr>
+          }
         }
       </tbody>
     </table>
