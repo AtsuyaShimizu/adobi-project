@@ -7,8 +7,7 @@
 
 .gantt-table {
   border-collapse: collapse;
-  width: 100%;
-  min-width: 800px;
+  width: calc(780px + 60vw);
   font-size: 0.875rem;
 }
 

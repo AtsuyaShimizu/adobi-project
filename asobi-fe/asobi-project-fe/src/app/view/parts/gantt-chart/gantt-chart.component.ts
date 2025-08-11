@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Input,
+  OnChanges,
+  ViewChild
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Task } from '../../../domain/model/task';
 
@@ -10,17 +18,29 @@ import { Task } from '../../../domain/model/task';
   templateUrl: './gantt-chart.component.html',
   styleUrl: './gantt-chart.component.scss'
 })
-export class GanttChartComponent {
+export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
+  @ViewChild('ganttWrapper') private ganttWrapper?: ElementRef<HTMLDivElement>;
+
+  private readonly today: Date = new Date();
 
   get dateRange(): Date[] {
-    if (this.tasks.length === 0) {
-      return [];
+    const start = new Date(this.today);
+    start.setHours(0, 0, 0, 0);
+
+    let startTime = start.getTime();
+    let endTime = this.addDays(start, 30).getTime();
+
+    if (this.tasks.length > 0) {
+      const taskStart = Math.min(...this.tasks.map(t => t.start.getTime()));
+      const taskEnd = Math.max(...this.tasks.map(t => t.end.getTime()));
+      startTime = Math.min(startTime, taskStart);
+      endTime = Math.max(endTime, taskEnd);
     }
-    const start = new Date(Math.min(...this.tasks.map(t => t.start.getTime())));
-    const end = new Date(Math.max(...this.tasks.map(t => t.end.getTime())));
+
+    const end = new Date(endTime);
     const dates: Date[] = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    for (let d = new Date(startTime); d <= end; d.setDate(d.getDate() + 1)) {
       dates.push(new Date(d));
     }
     return dates;
@@ -50,6 +70,34 @@ export class GanttChartComponent {
     const progressDays = Math.round(total * (task.progress / 100));
     const progressEnd = this.addDays(start, progressDays - 1);
     return date <= progressEnd;
+  }
+
+  ngAfterViewInit(): void {
+    this.scrollToToday();
+  }
+
+  ngOnChanges(): void {
+    this.scrollToToday();
+  }
+
+  private scrollToToday(): void {
+    if (!this.ganttWrapper) {
+      return;
+    }
+    const index = this.dateRange.findIndex(d => this.isSameDay(d, this.today));
+    if (index < 0) {
+      return;
+    }
+    const dayWidth = 26; // cell width + border
+    this.ganttWrapper.nativeElement.scrollLeft = index * dayWidth;
+  }
+
+  private isSameDay(a: Date, b: Date): boolean {
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
   }
 
   isPlanned(task: Task, date: Date): boolean {

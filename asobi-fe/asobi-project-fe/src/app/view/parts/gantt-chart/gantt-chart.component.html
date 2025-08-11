@@ -1,43 +1,39 @@
-@if (tasks.length > 0) {
-  <div class="gantt-wrapper">
-    <table class="gantt-table">
-      <thead>
-        <tr>
-          <th rowspan="2" class="sticky type-col">タスク分類</th>
-          <th rowspan="2" class="sticky name-col">タスク名</th>
-          <th rowspan="2" class="sticky detail-col">タスク詳細</th>
-          <th rowspan="2" class="sticky assignee-col">担当者</th>
-          <th rowspan="2" class="sticky start-col">開始日</th>
-          <th rowspan="2" class="sticky end-col">終了日</th>
-          <th rowspan="2" class="sticky progress-col">進捗率</th>
-          @for (month of months; track month.label) {
-            <th [attr.colspan]="month.days">{{ month.label }}</th>
-          }
-        </tr>
-        <tr>
-          @for (date of dateRange; track $index) {
-            <th>{{ date | date:'dd' }}</th>
-          }
-        </tr>
-      </thead>
-      <tbody>
-        @for (task of tasks; track task.id) {
-          <tr>
-            <td class="sticky type-col">{{ task.type }}</td>
-            <td class="sticky name-col">{{ task.name }}</td>
-            <td class="sticky detail-col">{{ task.detail }}</td>
-            <td class="sticky assignee-col">{{ task.assignee }}</td>
-            <td class="sticky start-col">{{ task.start | date:'yyyy-MM-dd' }}</td>
-            <td class="sticky end-col">{{ task.end | date:'yyyy-MM-dd' }}</td>
-            <td class="sticky progress-col">{{ task.progress }}%</td>
-            @for (date of dateRange; track $index) {
-              <td class="day" [class.progress]="isProgress(task, date)" [class.planned]="isPlanned(task, date)"></td>
-            }
-          </tr>
+<div class="gantt-wrapper" #ganttWrapper>
+  <table class="gantt-table">
+    <thead>
+      <tr>
+        <th rowspan="2" class="sticky type-col">タスク分類</th>
+        <th rowspan="2" class="sticky name-col">タスク名</th>
+        <th rowspan="2" class="sticky detail-col">タスク詳細</th>
+        <th rowspan="2" class="sticky assignee-col">担当者</th>
+        <th rowspan="2" class="sticky start-col">開始日</th>
+        <th rowspan="2" class="sticky end-col">終了日</th>
+        <th rowspan="2" class="sticky progress-col">進捗率</th>
+        @for (month of months; track month.label) {
+          <th [attr.colspan]="month.days">{{ month.label }}</th>
         }
-      </tbody>
-    </table>
-  </div>
-} @else {
-  <p>タスクがありません。</p>
-}
+      </tr>
+      <tr>
+        @for (date of dateRange; track $index) {
+          <th>{{ date | date:'dd' }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (task of tasks; track task.id) {
+        <tr>
+          <td class="sticky type-col">{{ task.type }}</td>
+          <td class="sticky name-col">{{ task.name }}</td>
+          <td class="sticky detail-col">{{ task.detail }}</td>
+          <td class="sticky assignee-col">{{ task.assignee }}</td>
+          <td class="sticky start-col">{{ task.start | date:'yyyy-MM-dd' }}</td>
+          <td class="sticky end-col">{{ task.end | date:'yyyy-MM-dd' }}</td>
+          <td class="sticky progress-col">{{ task.progress }}%</td>
+          @for (date of dateRange; track $index) {
+            <td class="day" [class.progress]="isProgress(task, date)" [class.planned]="isPlanned(task, date)"></td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
