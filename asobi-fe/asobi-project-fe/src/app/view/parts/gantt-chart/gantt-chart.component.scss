@@ -69,6 +69,27 @@ td {
   z-index: 1;
 }
 
+.task-table thead th {
+  height: 48px;
+  line-height: 48px;
+  padding: 0 4px;
+}
+
+.chart-table thead tr:first-child th {
+  top: 0;
+  height: 24px;
+  line-height: 24px;
+  padding: 0 4px;
+  z-index: 2;
+}
+
+.chart-table thead tr:nth-child(2) th {
+  top: 24px;
+  height: 24px;
+  line-height: 24px;
+  padding: 0 4px;
+}
+
 .type-col { min-width: 100px; }
 .name-col { min-width: 120px; }
 .detail-col { min-width: 180px; }
