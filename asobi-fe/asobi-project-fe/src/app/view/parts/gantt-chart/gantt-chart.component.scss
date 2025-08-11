@@ -1,26 +1,33 @@
 .gantt-container {
   display: flex;
+  width: 100%;
   border: 1px solid #ddd;
   border-radius: 8px;
   background: #fafafa;
 }
 
 .task-area {
-  overflow: hidden;
+  flex: 0 0 780px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 300px;
 }
 
 .chart-area {
-  overflow-x: auto;
+  flex: 1;
+  overflow: auto;
+  min-height: 300px;
 }
 
 .task-table,
 .chart-table {
   border-collapse: collapse;
   font-size: 0.875rem;
+  table-layout: fixed;
 }
 
 .task-table {
-  width: 780px;
+  width: 100%;
 }
 
 th,

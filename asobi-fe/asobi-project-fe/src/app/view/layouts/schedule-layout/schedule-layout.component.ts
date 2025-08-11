@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 import { Task } from '../../../domain/model/task';
 import { GanttChartComponent } from '../../parts/gantt-chart/gantt-chart.component';
 import { TaskFormComponent } from '../../parts/task-form/task-form.component';
+import { HeaderComponent } from '../../parts/header/header.component';
 
 @Component({
   selector: 'app-schedule-layout',
   standalone: true,
-  imports: [GanttChartComponent, TaskFormComponent],
+  imports: [HeaderComponent, GanttChartComponent, TaskFormComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './schedule-layout.component.html',
   styleUrl: './schedule-layout.component.scss'
