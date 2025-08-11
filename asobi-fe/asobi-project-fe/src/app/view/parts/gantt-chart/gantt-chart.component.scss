@@ -46,6 +46,21 @@ td {
   white-space: nowrap;
 }
 
+.task-table tbody tr,
+.chart-table tbody tr {
+  height: 24px;
+}
+
+.task-table tbody td {
+  padding: 0 4px;
+  height: 24px;
+  line-height: 24px;
+}
+
+.chart-table tbody td {
+  height: 24px;
+}
+
 .task-table thead th,
 .chart-table thead th {
   position: sticky;
