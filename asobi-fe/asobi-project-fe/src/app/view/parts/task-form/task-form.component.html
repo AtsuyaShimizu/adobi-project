@@ -1,31 +1,33 @@
 <form (ngSubmit)="submit()" #f="ngForm">
-  <div>
-    <label>分類</label>
-    <input name="type" [(ngModel)]="task.type" />
+  <div class="field">
+    <label for="type">分類</label>
+    <input id="type" name="type" [(ngModel)]="task.type" />
   </div>
-  <div>
-    <label>タスク名</label>
-    <input name="name" [(ngModel)]="task.name" required />
+  <div class="field">
+    <label for="name">タスク名</label>
+    <input id="name" name="name" [(ngModel)]="task.name" required />
   </div>
-  <div>
-    <label>詳細</label>
-    <textarea name="detail" [(ngModel)]="task.detail"></textarea>
+  <div class="field">
+    <label for="detail">詳細</label>
+    <textarea id="detail" name="detail" [(ngModel)]="task.detail"></textarea>
   </div>
-  <div>
-    <label>担当者</label>
-    <input name="assignee" [(ngModel)]="task.assignee" />
+  <div class="field">
+    <label for="assignee">担当者</label>
+    <input id="assignee" name="assignee" [(ngModel)]="task.assignee" />
   </div>
-  <div>
-    <label>開始日</label>
-    <input type="date" name="start" [(ngModel)]="task.start" />
+  <div class="field">
+    <label for="start">開始日</label>
+    <input id="start" type="date" name="start" [(ngModel)]="task.start" />
   </div>
-  <div>
-    <label>終了日</label>
-    <input type="date" name="end" [(ngModel)]="task.end" />
+  <div class="field">
+    <label for="end">終了日</label>
+    <input id="end" type="date" name="end" [(ngModel)]="task.end" />
   </div>
-  <div>
-    <label>進捗(%)</label>
-    <input type="number" name="progress" [(ngModel)]="task.progress" min="0" max="100" />
+  <div class="field">
+    <label for="progress">進捗(%)</label>
+    <input id="progress" type="number" name="progress" [(ngModel)]="task.progress" min="0" max="100" />
   </div>
-  <button type="submit">登録</button>
+  <div class="actions">
+    <button type="submit" [disabled]="f.invalid">登録</button>
+  </div>
 </form>

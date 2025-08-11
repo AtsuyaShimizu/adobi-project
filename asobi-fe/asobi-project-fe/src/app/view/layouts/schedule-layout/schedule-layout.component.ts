@@ -13,5 +13,8 @@ import { TaskFormComponent } from '../../parts/task-form/task-form.component';
 })
 export class ScheduleLayoutComponent {
   @Input({ required: true }) tasks: Task[] = [];
+  @Input() formVisible = false;
   @Output() create = new EventEmitter<Task>();
+  @Output() openForm = new EventEmitter<void>();
+  @Output() closeForm = new EventEmitter<void>();
 }
