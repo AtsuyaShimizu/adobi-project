@@ -1,10 +1,24 @@
+
 .layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.content {
   padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .toolbar {
   text-align: right;
   margin-bottom: 1rem;
+}
+
+app-gantt-chart {
+  flex: 1;
 }
 
 .task-dialog {

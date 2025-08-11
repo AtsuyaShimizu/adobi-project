@@ -1,17 +1,20 @@
 <div class="layout">
-  <div class="toolbar">
-    <button (click)="openForm.emit()">タスクを追加</button>
-  </div>
-  <app-gantt-chart [tasks]="tasks"></app-gantt-chart>
-  @if (formVisible) {
-    <div class="task-dialog" (click)="closeForm.emit()">
-      <div class="dialog" (click)="$event.stopPropagation()">
-        <h2>タスク追加</h2>
-        <app-task-form (save)="create.emit($event); closeForm.emit()"></app-task-form>
-        <div class="actions">
-          <button class="close" (click)="closeForm.emit()">閉じる</button>
+  <app-header></app-header>
+  <div class="content">
+    <div class="toolbar">
+      <button (click)="openForm.emit()">タスクを追加</button>
+    </div>
+    <app-gantt-chart [tasks]="tasks"></app-gantt-chart>
+    @if (formVisible) {
+      <div class="task-dialog" (click)="closeForm.emit()">
+        <div class="dialog" (click)="$event.stopPropagation()">
+          <h2>タスク追加</h2>
+          <app-task-form (save)="create.emit($event); closeForm.emit()"></app-task-form>
+          <div class="actions">
+            <button class="close" (click)="closeForm.emit()">閉じる</button>
+          </div>
         </div>
       </div>
-    </div>
-  }
+    }
+  </div>
 </div>
