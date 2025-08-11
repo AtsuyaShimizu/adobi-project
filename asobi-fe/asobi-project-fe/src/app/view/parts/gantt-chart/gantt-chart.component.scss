@@ -1,0 +1,16 @@
+.gantt {
+  width: 100%;
+}
+.row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.label {
+  width: 150px;
+}
+.bar {
+  height: 20px;
+  background-color: #3f51b5;
+  transition: width 0.3s;
+}
