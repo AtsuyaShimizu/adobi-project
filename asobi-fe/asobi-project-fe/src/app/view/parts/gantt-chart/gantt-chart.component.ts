@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   Input,
@@ -27,26 +28,16 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
 
   private readonly today: Date = new Date();
 
-  get dateRange(): Date[] {
+  protected dateRange: Date[] = [];
+  private rangeStart: Date;
+  private rangeEnd: Date;
+
+  constructor(private cdr: ChangeDetectorRef) {
     const start = new Date(this.today);
     start.setHours(0, 0, 0, 0);
-
-    let startTime = start.getTime();
-    let endTime = this.addDays(start, 365).getTime();
-
-    if (this.tasks.length > 0) {
-      const taskStart = Math.min(...this.tasks.map(t => t.start.getTime()));
-      const taskEnd = Math.max(...this.tasks.map(t => t.end.getTime()));
-      startTime = Math.min(startTime, taskStart);
-      endTime = Math.max(endTime, taskEnd);
-    }
-
-    const end = new Date(endTime);
-    const dates: Date[] = [];
-    for (let d = new Date(startTime); d <= end; d.setDate(d.getDate() + 1)) {
-      dates.push(new Date(d));
-    }
-    return dates;
+    this.rangeStart = this.addDays(start, -365);
+    this.rangeEnd = this.addDays(start, 365);
+    this.buildDateRange();
   }
 
   get months(): { label: string; days: number }[] {
@@ -81,6 +72,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   }
 
   ngOnChanges(): void {
+    this.ensureTaskRange();
     this.scrollToToday();
   }
 
@@ -100,8 +92,18 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     if (!this.chartArea || !this.taskArea) {
       return;
     }
-    this.chartArea.nativeElement.addEventListener('scroll', () => {
-      this.taskArea!.nativeElement.scrollTop = this.chartArea!.nativeElement.scrollTop;
+    const chartEl = this.chartArea.nativeElement;
+    const taskEl = this.taskArea.nativeElement;
+    chartEl.addEventListener('scroll', () => {
+      taskEl.scrollTop = chartEl.scrollTop;
+
+      if (chartEl.scrollLeft + chartEl.clientWidth >= chartEl.scrollWidth - 100) {
+        this.extendRight(365);
+      } else if (chartEl.scrollLeft <= 100) {
+        const prevWidth = chartEl.scrollWidth;
+        this.extendLeft(365);
+        chartEl.scrollLeft += chartEl.scrollWidth - prevWidth;
+      }
     });
   }
 
@@ -133,5 +135,45 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
+  }
+
+  private buildDateRange(): void {
+    const dates: Date[] = [];
+    for (let d = new Date(this.rangeStart); d <= this.rangeEnd; d.setDate(d.getDate() + 1)) {
+      dates.push(new Date(d));
+    }
+    this.dateRange = dates;
+  }
+
+  private extendRight(days: number): void {
+    for (let i = 1; i <= days; i++) {
+      this.dateRange.push(this.addDays(this.rangeEnd, i));
+    }
+    this.rangeEnd = this.addDays(this.rangeEnd, days);
+    this.cdr.markForCheck();
+  }
+
+  private extendLeft(days: number): void {
+    const newDates: Date[] = [];
+    for (let i = days; i >= 1; i--) {
+      newDates.push(this.addDays(this.rangeStart, -i));
+    }
+    this.dateRange = [...newDates, ...this.dateRange];
+    this.rangeStart = this.addDays(this.rangeStart, -days);
+    this.cdr.markForCheck();
+  }
+
+  private ensureTaskRange(): void {
+    if (this.tasks.length === 0) {
+      return;
+    }
+    const taskStart = new Date(Math.min(...this.tasks.map(t => t.start.getTime())));
+    const taskEnd = new Date(Math.max(...this.tasks.map(t => t.end.getTime())));
+    if (taskStart < this.rangeStart) {
+      this.extendLeft(this.diffDays(taskStart, this.rangeStart));
+    }
+    if (taskEnd > this.rangeEnd) {
+      this.extendRight(this.diffDays(this.rangeEnd, taskEnd));
+    }
   }
 }
