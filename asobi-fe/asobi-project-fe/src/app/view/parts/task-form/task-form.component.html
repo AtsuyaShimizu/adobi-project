@@ -1,0 +1,31 @@
+<form (ngSubmit)="submit()" #f="ngForm">
+  <div>
+    <label>分類</label>
+    <input name="type" [(ngModel)]="task.type" />
+  </div>
+  <div>
+    <label>タスク名</label>
+    <input name="name" [(ngModel)]="task.name" required />
+  </div>
+  <div>
+    <label>詳細</label>
+    <textarea name="detail" [(ngModel)]="task.detail"></textarea>
+  </div>
+  <div>
+    <label>担当者</label>
+    <input name="assignee" [(ngModel)]="task.assignee" />
+  </div>
+  <div>
+    <label>開始日</label>
+    <input type="date" name="start" [(ngModel)]="task.start" />
+  </div>
+  <div>
+    <label>終了日</label>
+    <input type="date" name="end" [(ngModel)]="task.end" />
+  </div>
+  <div>
+    <label>進捗(%)</label>
+    <input type="number" name="progress" [(ngModel)]="task.progress" min="0" max="100" />
+  </div>
+  <button type="submit">登録</button>
+</form>

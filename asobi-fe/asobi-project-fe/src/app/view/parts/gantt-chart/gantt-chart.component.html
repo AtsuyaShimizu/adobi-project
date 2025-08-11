@@ -1,0 +1,8 @@
+<div class="gantt">
+  @for (task of tasks; track task.id) {
+    <div class="row">
+      <div class="label">{{ task.name }} ({{ task.assignee }})</div>
+      <div class="bar" [style.width.%]="task.progress"></div>
+    </div>
+  }
+</div>
