@@ -20,7 +20,7 @@ import { Task } from '../../../domain/model/task';
 })
 export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
-  @ViewChild('ganttWrapper') private ganttWrapper?: ElementRef<HTMLDivElement>;
+  @ViewChild('chartArea') private chartArea?: ElementRef<HTMLDivElement>;
 
   private readonly today: Date = new Date();
 
@@ -81,15 +81,15 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   }
 
   private scrollToToday(): void {
-    if (!this.ganttWrapper) {
+    if (!this.chartArea) {
       return;
     }
     const index = this.dateRange.findIndex(d => this.isSameDay(d, this.today));
     if (index < 0) {
       return;
     }
-    const dayWidth = 26; // cell width + border
-    this.ganttWrapper.nativeElement.scrollLeft = index * dayWidth;
+    const dayWidth = 38; // cell width + border
+    this.chartArea.nativeElement.scrollLeft = index * dayWidth;
   }
 
   private isSameDay(a: Date, b: Date): boolean {
