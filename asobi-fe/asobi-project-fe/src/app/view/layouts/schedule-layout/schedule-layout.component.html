@@ -4,10 +4,11 @@
     <div class="toolbar">
       <button class="add-task" (click)="openForm.emit()">
         <img src="add.svg" alt="" class="icon" />
-        タスクを追加
+        <span>タスクを追加</span>
       </button>
-      <button class="open-calendar secondary" (click)="openCalendar.emit()">
-        <img src="calendar.svg" alt="カレンダーを開く" class="icon" />
+      <button class="open-calendar" (click)="openCalendar.emit()">
+        <img src="calendar.svg" alt="" class="icon" />
+        <span>カレンダー</span>
       </button>
     </div>
     <app-gantt-chart #ganttChart [tasks]="tasks"></app-gantt-chart>
