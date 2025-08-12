@@ -1,0 +1,9 @@
+<div class="memo-modal" (click)="close.emit()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <h2>メモ</h2>
+    <textarea [(ngModel)]="text" rows="5"></textarea>
+    <div class="actions">
+      <button class="confirm" (click)="confirm.emit(text)">決定</button>
+    </div>
+  </div>
+</div>

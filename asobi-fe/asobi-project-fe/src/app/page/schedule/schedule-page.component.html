@@ -1,10 +1,16 @@
 <app-schedule-layout
   [tasks]="tasks()"
+  [memos]="memos()"
   [formVisible]="isFormVisible()"
+  [memoVisible]="isMemoVisible()"
   [calendarVisible]="isCalendarVisible()"
   [dateTime]="dateTime()"
   (openForm)="openForm()"
   (closeForm)="closeForm()"
+  (openMemo)="openMemo()"
+  (closeMemo)="closeMemo()"
+  (memoCreate)="onMemoCreate($event)"
+  (memoChange)="onMemoChange($event)"
   (openCalendar)="openCalendar()"
   (closeCalendar)="closeCalendar()"
   (create)="onCreate($event)"></app-schedule-layout>

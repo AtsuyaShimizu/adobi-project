@@ -3,6 +3,8 @@ import { ScheduleLayoutComponent } from '../../view/layouts/schedule-layout/sche
 import { ScheduleService } from '../../domain/service/impl/schedule.service.impl';
 import { Task } from '../../domain/model/task';
 import { ClockService } from '../../domain/service/impl/clock.service.impl';
+import { MemoService } from '../../domain/service/impl/memo.service.impl';
+import { Memo } from '../../domain/model/memo';
 
 @Component({
   selector: 'app-schedule-page',
@@ -14,9 +16,12 @@ import { ClockService } from '../../domain/service/impl/clock.service.impl';
 export class SchedulePageComponent implements OnInit {
   #scheduleService = inject(ScheduleService);
   #clockService = inject(ClockService);
+  #memoService = inject(MemoService);
   protected tasks = this.#scheduleService.tasks;
+  protected memos = this.#memoService.memos;
   protected isFormVisible = signal(false);
   protected isCalendarVisible = signal(false);
+  protected isMemoVisible = signal(false);
   protected dateTime = this.#clockService.now;
 
   ngOnInit(): void {
@@ -40,8 +45,33 @@ export class SchedulePageComponent implements OnInit {
     this.isCalendarVisible.set(false);
   }
 
+  openMemo(): void {
+    this.isMemoVisible.set(true);
+  }
+
+  closeMemo(): void {
+    this.isMemoVisible.set(false);
+  }
+
   onCreate(task: Task): void {
     this.#scheduleService.add(task);
     this.closeForm();
+  }
+
+  onMemoCreate(text: string): void {
+    const memo: Memo = {
+      id: crypto.randomUUID(),
+      text,
+      x: 720,
+      y: 56,
+      width: 120,
+      height: 80,
+    };
+    this.#memoService.add(memo);
+    this.closeMemo();
+  }
+
+  onMemoChange(memo: Memo): void {
+    this.#memoService.update(memo);
   }
 }
