@@ -231,10 +231,11 @@ thead .sticky-left.h {
   left: 0;
 }
 
+
 .memo {
   position: absolute;
-  resize: both;
 }
+
 
 .memo .memo-content {
   width: 100%;
@@ -243,7 +244,7 @@ thead .sticky-left.h {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: none;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 4px 0 4px 4px;
   clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
 }
 
@@ -271,6 +272,16 @@ thead .sticky-left.h {
   border-color: transparent transparent #fde68a transparent;
   box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.1);
   z-index: 1;
+}
+
+.memo .resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  background: transparent;
 }
 
 .memo.editing {
