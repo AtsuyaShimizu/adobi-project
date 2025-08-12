@@ -175,15 +175,19 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     event.preventDefault();
   }
 
-  onMemoBlur(memo: Memo, el: HTMLElement): void {
+  onMemoBlur(event: FocusEvent, memo: Memo): void {
+    const el = event.target as HTMLElement | null;
+    if (!el) return;
     memo.text = el.innerText;
     memo.width = el.offsetWidth;
     memo.height = el.offsetHeight;
     this.memoChange.emit({ ...memo });
   }
 
-  onMemoMouseUp(memo: Memo, el: HTMLElement): void {
+  onMemoMouseUp(event: MouseEvent, memo: Memo): void {
     if (this.dragData) return;
+    const el = event.currentTarget as HTMLElement | null;
+    if (!el) return;
     memo.width = el.offsetWidth;
     memo.height = el.offsetHeight;
     memo.text = el.innerText;
