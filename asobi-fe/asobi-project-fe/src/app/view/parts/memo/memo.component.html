@@ -1,0 +1,13 @@
+<div class="memo-content">
+  <button class="edit-button" (mousedown)="onEditButton($event)">
+    <img src="edit.svg" alt="" class="icon" />
+    <span>編集</span>
+  </button>
+  <div
+    #memoBody
+    class="memo-body"
+    [attr.contenteditable]="editing ? 'true' : null"
+    (blur)="onBlur($event)"
+  >{{ memo.text }}</div>
+</div>
+<div class="resize-handle" (mousedown)="onResizeMouseDown($event)"></div>
