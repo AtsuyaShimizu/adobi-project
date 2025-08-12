@@ -79,12 +79,12 @@
           [style.width.px]="memo.width"
           [style.height.px]="memo.height"
           (mousedown)="onMemoMouseDown($event, memo)"
-          (mouseup)="onMemoMouseUp(memo, $event.currentTarget as HTMLElement)"
+          (mouseup)="onMemoMouseUp($event, memo)"
         >
           <div
             class="memo-body"
             contenteditable
-            (blur)="onMemoBlur(memo, $event.target as HTMLElement)"
+            (blur)="onMemoBlur($event, memo)"
           >{{ memo.text }}</div>
         </div>
       }
