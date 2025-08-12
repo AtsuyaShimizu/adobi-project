@@ -2,8 +2,14 @@
   <app-header></app-header>
   <div class="content">
     <div class="toolbar">
-      <button (click)="openForm.emit()">タスクを追加</button>
-      <button (click)="ganttChart.scrollToToday()">今日に戻る</button>
+      <button class="add-task" (click)="openForm.emit()">
+        <img src="add.svg" alt="" class="icon" />
+        タスクを追加
+      </button>
+      <button class="to-today secondary" (click)="ganttChart.scrollToToday()">
+        <img src="today.svg" alt="" class="icon" />
+        今日に戻る
+      </button>
     </div>
     <app-gantt-chart #ganttChart [tasks]="tasks"></app-gantt-chart>
     @if (formVisible) {

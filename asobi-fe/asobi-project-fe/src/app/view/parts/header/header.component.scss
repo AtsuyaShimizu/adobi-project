@@ -20,20 +20,20 @@
 }
 
 .logout {
-  background: var(--color-primary);
+  background: none;
   border: none;
   color: #fff;
-  padding: 0.4rem 0.9rem;
-  border-radius: 6px;
+  padding: 0;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: opacity 0.2s;
 }
 
 .logout:hover {
-  background: #2563eb;
+  opacity: 0.8;
 }
 
-.logo {
+.logo,
+.icon {
   width: 24px;
   height: 24px;
 }
