@@ -46,8 +46,12 @@
           }
         </tr>
         <tr>
-          @for (date of dateRange; track $index) {
-            <th class="date-col">{{ date | date:'dd' }}</th>
+          @for (date of dateRange; track $index; let i = $index) {
+            <th
+              class="date-col"
+              [class.month-boundary]="isMonthStart(date) && i !== 0"
+              >{{ date | date:'dd' }}</th
+            >
           }
         </tr>
       </thead>
@@ -55,12 +59,20 @@
         @for (row of emptyRows; track $index; let i = $index) {
           <tr>
             @if (tasks[i]; as task) {
-              @for (date of dateRange; track $index) {
-                <td class="day" [class.progress]="isProgress(task, date)" [class.planned]="isPlanned(task, date)"></td>
+              @for (date of dateRange; track $index; let j = $index) {
+                <td
+                  class="day"
+                  [class.progress]="isProgress(task, date)"
+                  [class.planned]="isPlanned(task, date)"
+                  [class.month-boundary]="isMonthStart(date) && j !== 0"
+                ></td>
               }
             } @else {
-              @for (date of dateRange; track $index) {
-                <td class="day"></td>
+              @for (date of dateRange; track $index; let j = $index) {
+                <td
+                  class="day"
+                  [class.month-boundary]="isMonthStart(date) && j !== 0"
+                ></td>
               }
             }
           </tr>
