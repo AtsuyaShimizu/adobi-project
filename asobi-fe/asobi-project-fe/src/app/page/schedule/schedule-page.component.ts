@@ -3,6 +3,8 @@ import { ScheduleLayoutComponent } from '../../view/layouts/schedule-layout/sche
 import { ScheduleService } from '../../domain/service/impl/schedule.service.impl';
 import { ScheduleState } from '../../domain/state/local/schedule.state';
 import { Task } from '../../domain/model/task';
+import { ClockService } from '../../domain/service/impl/clock.service.impl';
+import { ClockState } from '../../domain/state/global/clock.state';
 
 @Component({
   selector: 'app-schedule-page',
@@ -14,11 +16,15 @@ import { Task } from '../../domain/model/task';
 export class SchedulePageComponent implements OnInit {
   #service = inject(ScheduleService);
   #state = inject(ScheduleState);
+  #clockService = inject(ClockService);
+  #clockState = inject(ClockState);
   protected tasks = this.#state.tasks;
   protected isFormVisible = signal(false);
+  protected dateTime = this.#clockState.now;
 
   ngOnInit(): void {
     this.#service.load();
+    this.#clockService.start();
   }
 
   openForm(): void {
