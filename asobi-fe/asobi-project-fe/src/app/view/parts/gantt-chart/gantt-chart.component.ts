@@ -140,6 +140,10 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     );
   }
 
+  protected isMonthStart(date: Date): boolean {
+    return date.getDate() === 1;
+  }
+
   isPlanned(task: Task, date: Date): boolean {
     const start = this.toStartOfDay(task.start);
     const end = this.toStartOfDay(task.end);

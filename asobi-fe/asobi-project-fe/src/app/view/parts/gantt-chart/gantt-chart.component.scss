@@ -96,6 +96,10 @@ td {
   padding: 0 4px;
 }
 
+.chart-table thead tr:first-child th:not(:first-child) {
+  border-left: 2px solid #9ca3af;
+}
+
 .type-col { min-width: 100px; }
 .name-col { min-width: 120px; }
 .detail-col { min-width: 180px; }
@@ -116,6 +120,10 @@ td {
 
 .day.planned {
   background-color: #93c5fd;
+}
+
+.month-boundary {
+  border-left: 2px solid #9ca3af;
 }
 
 .task-table tbody tr:nth-child(even),
