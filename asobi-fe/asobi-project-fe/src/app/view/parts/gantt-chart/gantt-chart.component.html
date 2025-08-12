@@ -1,83 +1,70 @@
 <div class="gantt-container">
-  <div class="body-area">
-    <div class="task-area">
-      <table class="task-table">
-        <thead>
-          <tr>
-            <th class="type-col">タスク分類</th>
-            <th class="name-col">タスク名</th>
-            <th class="assignee-col">担当者</th>
-            <th class="start-col">開始日</th>
-            <th class="end-col">終了日</th>
-            <th class="progress-col">進捗率</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of emptyRows; track $index; let i = $index) {
-            <tr>
-              @if (tasks[i]; as task) {
-                <td class="type-col">{{ task.type }}</td>
-                <td class="name-col">{{ task.name }}</td>
-                <td class="assignee-col">{{ task.assignee }}</td>
-                <td class="start-col">{{ task.start | date: "yyyy-MM-dd" }}</td>
-                <td class="end-col">{{ task.end | date: "yyyy-MM-dd" }}</td>
-                <td class="progress-col">{{ task.progress }}%</td>
-              } @else {
-                <td class="type-col"></td>
-                <td class="name-col"></td>
-                <td class="assignee-col"></td>
-                <td class="start-col"></td>
-                <td class="end-col"></td>
-                <td class="progress-col"></td>
-              }
-            </tr>
+  <!-- 縦横のスクロール祖先はこの1つだけ -->
+  <div class="scroll-host" #scrollHost>
+    <table class="gantt-table">
+      <thead>
+        <!-- 1行目：左6列は実際に rowspan=2（タスクヘッダーは1セルで2行分） -->
+        <tr class="head-1">
+          <th class="h sticky-left col-type" rowspan="2">タスク分類</th>
+          <th class="h sticky-left col-name" rowspan="2">タスク名</th>
+          <th class="h sticky-left col-assignee" rowspan="2">担当者</th>
+          <th class="h sticky-left col-start" rowspan="2">開始日</th>
+          <th class="h sticky-left col-end" rowspan="2">終了日</th>
+          <th class="h sticky-left col-progress" rowspan="2">進捗率</th>
+
+          @for (month of months; track month.label) {
+            <th class="h month" [attr.colspan]="month.days">{{ month.label }}</th>
           }
-        </tbody>
-      </table>
-    </div>
-    <div class="chart-area" #chartArea>
-      <table class="chart-table">
-        <thead>
+        </tr>
+
+        <!-- 2行目：日付 -->
+        <tr class="head-2">
+          @for (date of dateRange; track $index; let i = $index) {
+            <th
+              class="h date-col"
+              [attr.data-idx]="i"
+              [class.month-boundary]="isMonthStart(date) && i !== 0"
+            >
+              {{ date | date : 'dd' }}
+            </th>
+          }
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (row of emptyRows; track $index; let i = $index) {
           <tr>
-            @for (month of months; track month.label) {
-              <th [attr.colspan]="month.days">{{ month.label }}</th>
+            @if (tasks[i]; as task) {
+              <td class="sticky-left col-type">{{ task.type }}</td>
+              <td class="sticky-left col-name">{{ task.name }}</td>
+              <td class="sticky-left col-assignee">{{ task.assignee }}</td>
+              <td class="sticky-left col-start">{{ task.start | date : 'yyyy-MM-dd' }}</td>
+              <td class="sticky-left col-end">{{ task.end | date : 'yyyy-MM-dd' }}</td>
+              <td class="sticky-left col-progress">{{ task.progress }}%</td>
+
+              @for (date of dateRange; track $index; let j = $index) {
+                <td
+                  class="day"
+                  [class.progress]="isProgress(task, date)"
+                  [class.planned]="isPlanned(task, date)"
+                  [class.month-boundary]="isMonthStart(date) && j !== 0"
+                ></td>
+              }
+            } @else {
+              <td class="sticky-left col-type"></td>
+              <td class="sticky-left col-name"></td>
+              <td class="sticky-left col-assignee"></td>
+              <td class="sticky-left col-start"></td>
+              <td class="sticky-left col-end"></td>
+              <td class="sticky-left col-progress"></td>
+
+              @for (date of dateRange; track $index; let j = $index) {
+                <td class="day" [class.month-boundary]="isMonthStart(date) && j !== 0"></td>
+              }
             }
           </tr>
-          <tr>
-            @for (date of dateRange; track $index; let i = $index) {
-              <th
-                class="date-col"
-                [class.month-boundary]="isMonthStart(date) && i !== 0"
-              >
-                {{ date | date: "dd" }}
-              </th>
-            }
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of emptyRows; track $index; let i = $index) {
-            <tr>
-              @if (tasks[i]; as task) {
-                @for (date of dateRange; track $index; let j = $index) {
-                  <td
-                    class="day"
-                    [class.progress]="isProgress(task, date)"
-                    [class.planned]="isPlanned(task, date)"
-                    [class.month-boundary]="isMonthStart(date) && j !== 0"
-                  ></td>
-                }
-              } @else {
-                @for (date of dateRange; track $index; let j = $index) {
-                  <td
-                    class="day"
-                    [class.month-boundary]="isMonthStart(date) && j !== 0"
-                  ></td>
-                }
-              }
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+        }
+      </tbody>
+    </table>
   </div>
 </div>

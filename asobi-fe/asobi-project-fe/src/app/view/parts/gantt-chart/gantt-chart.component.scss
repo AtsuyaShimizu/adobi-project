@@ -1,154 +1,128 @@
 :host {
   display: block;
   height: 100%;
+
+  /* このコンポーネント内だけで使う寸法変数 */
+  --head1: 28px; /* 月行の高さ */
+  --head2: 28px; /* 日付行の高さ */
+  --row-h: 24px;
+
+  /* 左6列の幅（累積 left を計算） */
+  --w-type: 150px;
+  --w-name: 200px;
+  --w-assignee: 80px;
+  --w-start: 100px;
+  --w-end: 100px;
+  --w-progress: 80px;
+
+  --left-type: 0px;
+  --left-name: calc(var(--left-type) + var(--w-type));
+  --left-assignee: calc(var(--left-name) + var(--w-name));
+  --left-start: calc(var(--left-assignee) + var(--w-assignee));
+  --left-end: calc(var(--left-start) + var(--w-start));
+  --left-progress: calc(var(--left-end) + var(--w-end));
 }
 
 .gantt-container {
-  display: flex;
-  width: 100%;
   height: 100%;
-  overflow: hidden;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
 }
 
-.body-area {
-  display: flex;
+/* sticky の基準を1つに限定 */
+.scroll-host {
   width: 100%;
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  align-items: flex-start;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: auto; /* 縦横ここで */
 }
 
-.body-area::-webkit-scrollbar {
-  display: none;
-}
-
-.task-area {
-  flex: 0 0 770px;
-  min-height: 300px;
-}
-
-.chart-area {
-  flex: 1;
-  min-height: 300px;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.task-table,
-.chart-table {
-  border-collapse: collapse;
-  font-size: 0.875rem;
+/* sticky と相性が良い separate を採用（Safari 安定） */
+.gantt-table {
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
+  font-size: 0.875rem;
+  width: max-content; /* 日付列の数に応じて広がる */
 }
 
-.task-table {
-  width: 100%;
-}
-
-th,
-td {
+.gantt-table th,
+.gantt-table td {
   border: 1px solid #e5e7eb;
-  padding: 4px;
-  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.task-table tbody tr,
-.chart-table tbody tr {
-  height: 24px;
-}
-
-.task-table tbody td {
-  padding: 0 4px;
-  height: 24px;
-  line-height: 24px;
-}
-
-.chart-table tbody td {
-  height: 24px;
-}
-
-.task-table thead th,
-.chart-table thead th {
+/* ---------------- ヘッダー固定（2行） ---------------- */
+.gantt-table thead .h {
   position: sticky;
-  top: 0;
   background: #e0f2fe;
-  z-index: 1;
+  color: #111827;
+  padding: 0 4px;
+  z-index: 10; /* 基本層 */
 }
 
-.task-table thead th {
-  height: 48.5px;
-  line-height: 48.5px;
+/* 1行目（月） */
+.gantt-table thead .head-1 .h {
+  top: 0;               /* 常に上に固定 */
+  height: var(--head1);
+  line-height: var(--head1);
+  z-index: 12;          /* 2行目より前面 */
+}
+
+/* 2行目（日付） */
+.gantt-table thead .head-2 .h {
+  top: var(--head1);    /* 1行目の下に固定 */
+  height: var(--head2);
+  line-height: var(--head2);
+  z-index: 11;
+}
+
+/* 月ヘッダーは z-index 11（指示どおり） */
+.gantt-table thead .head-1 .h.month { z-index: 11; }
+
+/* 左6列のヘッダー（rowspan=2）は最前面＆ヘッダー色を維持 */
+thead .sticky-left.h {
+  z-index: 100 !important;         /* ボディより上に確実に */
+  background: #e0f2fe !important;  /* ヘッダー色を優先 */
+}
+
+/* 左固定列（ヘッダー/ボディ共通） */
+.sticky-left {
+  position: sticky;
+  background: #fff;   /* ボディ側は白（ヘッダーは上で上書き） */
+  z-index: 20;        /* ボディ左列の基準層 */
+}
+
+/* 列幅と固定位置 */
+.col-type     { min-width: var(--w-type);     width: var(--w-type);     left: var(--left-type); }
+.col-name     { min-width: var(--w-name);     width: var(--w-name);     left: var(--left-name); }
+.col-assignee { min-width: var(--w-assignee); width: var(--w-assignee); left: var(--left-assignee); }
+.col-start    { min-width: var(--w-start);    width: var(--w-start);    left: var(--left-start); }
+.col-end      { min-width: var(--w-end);      width: var(--w-end);      left: var(--left-end); }
+.col-progress { min-width: var(--w-progress); width: var(--w-progress); left: var(--left-progress); }
+
+/* ---------------- ボディ行 ---------------- */
+.gantt-table tbody tr { height: var(--row-h); }
+.gantt-table tbody td {
+  height: var(--row-h);
+  line-height: var(--row-h);
   padding: 0 4px;
 }
 
-.chart-table thead tr:first-child th {
-  top: 0;
-  height: 24px;
-  line-height: 24px;
-  padding: 0 4px;
-  z-index: 2;
-}
+/* 日付列のヘッダー/ボディ幅 */
+.date-col { width: 36px; text-align: center; }
+.day      { width: 36px; padding: 0; }
 
-.chart-table thead tr:nth-child(2) th {
-  top: 25px;
-  height: 24px;
-  line-height: 24px;
-  padding: 0 4px;
-}
+/* 塗りつぶし */
+.day.progress { background-color: var(--color-primary, #60a5fa); }
+.day.planned  { background-color: #93c5fd; }
 
-.type-col {
-  min-width: 150px;
-  width: 150px;
-}
-.name-col {
-  min-width: 200px;
-  width: 200px;
-}
-.assignee-col {
-  min-width: 80px;
-  width: 80px;
-}
-.start-col {
-  min-width: 100px;
-  width: 100px;
-}
-.end-col {
-  min-width: 100px;
-  width: 100px;
-}
-.progress-col {
-  min-width: 80px;
-  width: 80px;
-}
+/* 月境界の強線 */
+.month-boundary { border-left: 2px solid #9ca3af !important; }
 
-.day {
-  width: 36px;
-  height: 24px;
-  padding: 0;
-}
-
-.day.progress {
-  background-color: var(--color-primary);
-}
-
-.day.planned {
-  background-color: #93c5fd;
-}
-
-.month-boundary {
-  border-left: 2px solid #9ca3af;
-}
-
-.task-table tbody tr:nth-child(even),
-.chart-table tbody tr:nth-child(even) {
+/* 偶数行のシマ模様（左固定には適用しない） */
+.gantt-table tbody tr:nth-child(even) td:not(.sticky-left) {
   background: #f5f5f5;
 }

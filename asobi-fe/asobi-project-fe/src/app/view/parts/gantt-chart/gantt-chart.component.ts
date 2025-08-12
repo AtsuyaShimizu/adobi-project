@@ -21,7 +21,8 @@ import { Task } from '../../../domain/model/task';
 })
 export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
-  @ViewChild('chartArea') private chartArea?: ElementRef<HTMLDivElement>;
+  @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
+
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
   private rangeStart: Date;
@@ -37,13 +38,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   get months(): { label: string; days: number }[] {
     const result: { label: string; days: number }[] = [];
     this.dateRange.forEach((d) => {
-      const label = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+      const label = `${d.getFullYear()}-${(d.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}`;
       const last = result[result.length - 1];
-      if (last && last.label === label) {
-        last.days++;
-      } else {
-        result.push({ label, days: 1 });
-      }
+      if (last && last.label === label) last.days++;
+      else result.push({ label, days: 1 });
     });
     return result;
   }
@@ -51,18 +51,30 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   isProgress(task: Task, date: Date): boolean {
     const start = this.toStartOfDay(task.start);
     const end = this.toStartOfDay(task.end);
-    if (date < start || date > end) {
-      return false;
-    }
+    if (date < start || date > end) return false;
     const total = this.diffDays(start, end) + 1;
     const progressDays = Math.round(total * (task.progress / 100));
     const progressEnd = this.addDays(start, progressDays - 1);
     return date <= progressEnd;
   }
 
+  isPlanned(task: Task, date: Date): boolean {
+    const start = this.toStartOfDay(task.start);
+    const end = this.toStartOfDay(task.end);
+    if (date < start || date > end) return false;
+    const total = this.diffDays(start, end) + 1;
+    const progressDays = Math.round(total * (task.progress / 100));
+    const progressEnd = this.addDays(start, progressDays - 1);
+    return date > progressEnd && date <= end;
+  }
+
+  protected isMonthStart(date: Date): boolean {
+    return date.getDate() === 1;
+  }
+
   ngAfterViewInit(): void {
     this.scrollToToday();
-    this.setupChartScrollHandling();
+    this.setupScrollHandling();
   }
 
   ngOnChanges(): void {
@@ -70,44 +82,53 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     this.scrollToToday();
   }
 
-  scrollToToday(): void {
-    if (!this.chartArea) {
-      return;
-    }
+  private scrollToToday(): void {
+    const host = this.scrollHost?.nativeElement;
+    if (!host) return;
+
     const today = this.getToday();
-    const index = this.dateRange.findIndex((d) => this.isSameDay(d, today));
-    if (index < 0) {
-      return;
-    }
+    const idx = this.dateRange.findIndex((d) => this.isSameDay(d, today));
+    if (idx < 0) return;
+
     requestAnimationFrame(() => {
-      const chartEl = this.chartArea!.nativeElement;
-      const selector = `.chart-table tbody tr:first-child td:nth-child(${index + 1})`;
-      const cell = chartEl.querySelector<HTMLTableCellElement>(selector);
-      if (cell) {
-        chartEl.scrollLeft = cell.offsetLeft;
-      }
+      const th = host.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
+      if (th) host.scrollLeft = th.offsetLeft;
     });
   }
 
-  private setupChartScrollHandling(): void {
-    if (!this.chartArea) {
-      return;
-    }
-    const chartEl = this.chartArea.nativeElement;
-    chartEl.addEventListener('scroll', () => {
-      if (
-        chartEl.scrollLeft + chartEl.clientWidth >=
-        chartEl.scrollWidth - 100
-      ) {
+  private setupScrollHandling(): void {
+    const host = this.scrollHost?.nativeElement;
+    if (!host) return;
+
+    host.addEventListener('scroll', () => {
+      if (host.scrollLeft + host.clientWidth >= host.scrollWidth - 100) {
         this.extendRight(365);
-      } else if (chartEl.scrollLeft <= 100) {
-        const prevWidth = chartEl.scrollWidth;
+      } else if (host.scrollLeft <= 100) {
+        const prevWidth = host.scrollWidth;
         this.extendLeft(365);
-        chartEl.scrollLeft += chartEl.scrollWidth - prevWidth;
+        host.scrollLeft += host.scrollWidth - prevWidth;
       }
     });
   }
 
+  private diffDays(a: Date, b: Date): number {
+    return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+  }
+  private addDays(date: Date, days: number): Date {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
+  private getToday(): Date {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }
+  private toStartOfDay(date: Date): Date {
+    const result = new Date(date);
+    result.setHours(0, 0, 0, 0);
+    return result;
+  }
   private isSameDay(a: Date, b: Date): boolean {
     return (
       a.getFullYear() === b.getFullYear() &&
@@ -116,51 +137,9 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     );
   }
 
-  protected isMonthStart(date: Date): boolean {
-    return date.getDate() === 1;
-  }
-
-  isPlanned(task: Task, date: Date): boolean {
-    const start = this.toStartOfDay(task.start);
-    const end = this.toStartOfDay(task.end);
-    if (date < start || date > end) {
-      return false;
-    }
-    const total = this.diffDays(start, end) + 1;
-    const progressDays = Math.round(total * (task.progress / 100));
-    const progressEnd = this.addDays(start, progressDays - 1);
-    return date > progressEnd && date <= end;
-  }
-
-  private diffDays(a: Date, b: Date): number {
-    return Math.floor((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
-  }
-
-  private addDays(date: Date, days: number): Date {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-  }
-
-  private getToday(): Date {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
-  }
-
-  private toStartOfDay(date: Date): Date {
-    const result = new Date(date);
-    result.setHours(0, 0, 0, 0);
-    return result;
-  }
-
   private buildDateRange(): void {
     const dates: Date[] = [];
-    for (
-      let d = new Date(this.rangeStart);
-      d <= this.rangeEnd;
-      d.setDate(d.getDate() + 1)
-    ) {
+    for (let d = new Date(this.rangeStart); d <= this.rangeEnd; d.setDate(d.getDate() + 1)) {
       dates.push(new Date(d));
     }
     this.dateRange = dates;
@@ -185,20 +164,10 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   }
 
   private ensureTaskRange(): void {
-    if (this.tasks.length === 0) {
-      return;
-    }
-    const taskStart = new Date(
-      Math.min(...this.tasks.map((t) => t.start.getTime())),
-    );
-    const taskEnd = new Date(
-      Math.max(...this.tasks.map((t) => t.end.getTime())),
-    );
-    if (taskStart < this.rangeStart) {
-      this.extendLeft(this.diffDays(taskStart, this.rangeStart));
-    }
-    if (taskEnd > this.rangeEnd) {
-      this.extendRight(this.diffDays(this.rangeEnd, taskEnd));
-    }
+    if (this.tasks.length === 0) return;
+    const taskStart = new Date(Math.min(...this.tasks.map((t) => t.start.getTime())));
+    const taskEnd = new Date(Math.max(...this.tasks.map((t) => t.end.getTime())));
+    if (taskStart < this.rangeStart) this.extendLeft(this.diffDays(taskStart, this.rangeStart));
+    if (taskEnd > this.rangeEnd) this.extendRight(this.diffDays(this.rangeEnd, taskEnd));
   }
 }
