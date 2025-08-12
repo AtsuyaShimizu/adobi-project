@@ -119,6 +119,10 @@ td {
   background-color: #93c5fd;
 }
 
+.month-boundary {
+  border-left: 2px solid #9ca3af;
+}
+
 .task-table tbody tr:nth-child(even),
 .chart-table tbody tr:nth-child(even) {
   background: #f5f5f5;
