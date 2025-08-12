@@ -25,9 +25,9 @@
 
 .gantt-container {
   height: 100%;
-  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  background: #fff;
+  background: var(--color-surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* sticky の基準を1つに限定 */
@@ -48,7 +48,7 @@
 
 .gantt-table th,
 .gantt-table td {
-  border: 1px solid #e5e7eb;
+  border: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -57,9 +57,9 @@
 /* ---------------- ヘッダー固定（2行） ---------------- */
 .gantt-table thead .h {
   position: sticky;
-  background: #e0f2fe;
-  color: #111827;
-  padding: 0 4px;
+  background: linear-gradient(135deg, #93c5fd, #3b82f6);
+  color: #fff;
+  padding: 0 6px;
   z-index: 10; /* 基本層 */
 }
 
@@ -85,14 +85,15 @@
 /* 左6列のヘッダー（rowspan=2）は最前面＆ヘッダー色を維持 */
 thead .sticky-left.h {
   z-index: 100 !important;         /* ボディより上に確実に */
-  background: #e0f2fe !important;  /* ヘッダー色を優先 */
+  background: linear-gradient(135deg, #93c5fd, #3b82f6) !important;  /* ヘッダー色を優先 */
 }
 
 /* 左固定列（ヘッダー/ボディ共通） */
 .sticky-left {
   position: sticky;
-  background: #fff;   /* ボディ側は白（ヘッダーは上で上書き） */
+  background: var(--color-surface);   /* ボディ側は白（ヘッダーは上で上書き） */
   z-index: 20;        /* ボディ左列の基準層 */
+  border-right: 1px solid #e5e7eb;
 }
 
 /* 列幅と固定位置 */
@@ -104,25 +105,44 @@ thead .sticky-left.h {
 .col-progress { min-width: var(--w-progress); width: var(--w-progress); left: var(--left-progress); }
 
 /* ---------------- ボディ行 ---------------- */
-.gantt-table tbody tr { height: var(--row-h); }
+.gantt-table tbody tr {
+  height: var(--row-h);
+  transition: background-color 0.2s;
+}
 .gantt-table tbody td {
   height: var(--row-h);
   line-height: var(--row-h);
   padding: 0 4px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.gantt-table tbody tr:hover td:not(.sticky-left) {
+  background: #f3f4f6;
 }
 
 /* 日付列のヘッダー/ボディ幅 */
 .date-col { width: 36px; text-align: center; }
-.day      { width: 36px; padding: 0; }
+.day      { width: 36px; padding: 0; position: relative; }
+
+.day::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  bottom: 20%;
+  left: 2px;
+  right: 2px;
+  border-radius: 4px;
+  background: transparent;
+}
+
+.day.progress::before { background-color: var(--color-primary, #3b82f6); }
+.day.planned::before  { background-color: rgba(59, 130, 246, 0.3); }
+
+.day.progress-start::before { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+.day.progress-end::before   { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+.day.planned-start::before  { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+.day.planned-end::before    { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
 
 /* 月境界の強線 */
 .month-boundary { border-left: 2px solid #9ca3af !important; }
 
-/* 偶数行のシマ模様（左固定には適用しない） */
-.gantt-table tbody tr:nth-child(even) td:not(.sticky-left) {
-  background: #f5f5f5;
-}
-
-/* 塗りつぶし */
-.gantt-table tbody tr td.day.progress { background-color: var(--color-primary, #60a5fa); }
-.gantt-table tbody tr td.day.planned  { background-color: #93c5fd; }
