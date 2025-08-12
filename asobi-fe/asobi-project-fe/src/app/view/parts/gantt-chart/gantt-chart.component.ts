@@ -22,7 +22,7 @@ import { Task } from '../../../domain/model/task';
 export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
   @ViewChild('chartArea') private chartArea?: ElementRef<HTMLDivElement>;
-  @ViewChild('ganttContainer') private ganttContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('taskArea') private taskArea?: ElementRef<HTMLDivElement>;
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
   private rangeStart: Date;
@@ -93,17 +93,21 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   }
 
   private setupScrollHandling(): void {
-    if (!this.chartArea || !this.ganttContainer) {
+    if (!this.chartArea || !this.taskArea) {
       return;
     }
     const chartEl = this.chartArea.nativeElement;
-    const containerEl = this.ganttContainer.nativeElement;
-
-    chartEl.addEventListener('wheel', (event) => {
-      containerEl.scrollTop += event.deltaY;
-    });
+    const taskEl = this.taskArea.nativeElement;
+    let isSyncing = false;
 
     chartEl.addEventListener('scroll', () => {
+      if (isSyncing) {
+        return;
+      }
+      isSyncing = true;
+      taskEl.scrollTop = chartEl.scrollTop;
+      setTimeout(() => (isSyncing = false));
+
       if (
         chartEl.scrollLeft + chartEl.clientWidth >=
         chartEl.scrollWidth - 100
@@ -114,6 +118,15 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
         this.extendLeft(365);
         chartEl.scrollLeft += chartEl.scrollWidth - prevWidth;
       }
+    });
+
+    taskEl.addEventListener('scroll', () => {
+      if (isSyncing) {
+        return;
+      }
+      isSyncing = true;
+      chartEl.scrollTop = taskEl.scrollTop;
+      setTimeout(() => (isSyncing = false));
     });
   }
 
