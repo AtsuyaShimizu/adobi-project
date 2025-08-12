@@ -25,16 +25,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   @ViewChild('taskArea') private taskArea?: ElementRef<HTMLDivElement>;
 
   protected readonly emptyRows = Array.from({ length: 100 });
-
-  private readonly today: Date = new Date();
-
   protected dateRange: Date[] = [];
   private rangeStart: Date;
   private rangeEnd: Date;
 
   constructor(private cdr: ChangeDetectorRef) {
-    const start = new Date(this.today);
-    start.setHours(0, 0, 0, 0);
+    const start = this.getToday();
     this.rangeStart = this.addDays(start, -365);
     this.rangeEnd = this.addDays(start, 365);
     this.buildDateRange();
@@ -80,8 +76,9 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     if (!this.chartArea) {
       return;
     }
+    const today = this.getToday();
     const index = this.dateRange.findIndex((d) =>
-      this.isSameDay(d, this.today),
+      this.isSameDay(d, today),
     );
     if (index < 0) {
       return;
@@ -157,6 +154,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
+  }
+
+  private getToday(): Date {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
   }
 
   private buildDateRange(): void {
