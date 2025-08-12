@@ -239,8 +239,10 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     const rect = host.getBoundingClientRect();
     const stickyWidth = this.getStickyWidth(host);
     const headerHeight = this.getHeaderHeight(host);
-    const x = event.clientX - rect.left - this.dragData.offsetX;
-    const y = event.clientY - rect.top - this.dragData.offsetY;
+    const x =
+      event.clientX - rect.left + host.scrollLeft - this.dragData.offsetX;
+    const y =
+      event.clientY - rect.top + host.scrollTop - this.dragData.offsetY;
     const maxX = host.scrollWidth - this.dragData.el.offsetWidth;
     const maxY = host.scrollHeight - this.dragData.el.offsetHeight;
     this.dragData.memo.x = Math.min(Math.max(x, stickyWidth), maxX);
