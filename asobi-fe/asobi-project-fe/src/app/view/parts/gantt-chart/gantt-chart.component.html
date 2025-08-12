@@ -45,6 +45,7 @@
               @for (date of dateRange; track date; let j = $index) {
                 <td
                   class="day"
+                  (mousedown)="onCellMouseDown($event)"
                   [class.progress]="isProgress(task, date)"
                   [class.planned]="isPlanned(task, date)"
                   [class.progress-start]="isProgressStart(task, date)"
@@ -63,7 +64,11 @@
               <td class="sticky-left col-progress"></td>
 
               @for (date of dateRange; track date; let j = $index) {
-                <td class="day" [class.month-boundary]="isMonthStart(date) && j !== 0"></td>
+                <td
+                  class="day"
+                  (mousedown)="onCellMouseDown($event)"
+                  [class.month-boundary]="isMonthStart(date) && j !== 0"
+                ></td>
               }
             }
           </tr>

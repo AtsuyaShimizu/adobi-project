@@ -29,7 +29,7 @@
     }
     @if (memoVisible) {
       <app-memo-modal
-        (confirm)="memoCreate.emit($event)"
+        (confirm)="onMemoConfirm($event)"
         (close)="closeMemo.emit()"
       ></app-memo-modal>
     }

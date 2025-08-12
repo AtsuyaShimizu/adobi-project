@@ -58,12 +58,12 @@ export class SchedulePageComponent implements OnInit {
     this.closeForm();
   }
 
-  onMemoCreate(text: string): void {
+  onMemoCreate(event: { text: string; x: number; y: number }): void {
     const memo: Memo = {
       id: crypto.randomUUID(),
-      text,
-      x: 720,
-      y: 56,
+      text: event.text,
+      x: event.x,
+      y: event.y,
       width: 120,
       height: 80,
     };

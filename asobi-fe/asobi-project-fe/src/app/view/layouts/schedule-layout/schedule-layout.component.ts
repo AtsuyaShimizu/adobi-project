@@ -44,7 +44,7 @@ export class ScheduleLayoutComponent {
   @Output() closeForm = new EventEmitter<void>();
   @Output() openMemo = new EventEmitter<void>();
   @Output() closeMemo = new EventEmitter<void>();
-  @Output() memoCreate = new EventEmitter<string>();
+  @Output() memoCreate = new EventEmitter<{ text: string; x: number; y: number }>();
   @Output() memoChange = new EventEmitter<Memo>();
   @Output() openCalendar = new EventEmitter<void>();
   @Output() closeCalendar = new EventEmitter<void>();
@@ -52,5 +52,12 @@ export class ScheduleLayoutComponent {
   onCalendarConfirm(date: Date): void {
     this.ganttChart?.scrollToDate(date);
     this.closeCalendar.emit();
+  }
+
+  onMemoConfirm(text: string): void {
+    const pos =
+      this.ganttChart?.getFocusedCellPosition() ??
+      this.ganttChart?.getTodayColumnPosition();
+    this.memoCreate.emit({ text, x: pos?.x ?? 0, y: pos?.y ?? 0 });
   }
 }
