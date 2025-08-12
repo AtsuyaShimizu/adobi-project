@@ -98,8 +98,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     const taskEl = this.taskArea.nativeElement;
 
     chartEl.addEventListener('scroll', () => {
-      if (taskEl.scrollTop !== chartEl.scrollTop) {
-        taskEl.scrollTop = chartEl.scrollTop;
+      const scrollTop = Math.round(chartEl.scrollTop);
+      if (chartEl.scrollTop !== scrollTop) {
+        chartEl.scrollTop = scrollTop;
+      }
+      if (taskEl.scrollTop !== scrollTop) {
+        taskEl.scrollTop = scrollTop;
       }
 
       if (
@@ -115,8 +119,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     });
 
     taskEl.addEventListener('scroll', () => {
-      if (chartEl.scrollTop !== taskEl.scrollTop) {
-        chartEl.scrollTop = taskEl.scrollTop;
+      const scrollTop = Math.round(taskEl.scrollTop);
+      if (taskEl.scrollTop !== scrollTop) {
+        taskEl.scrollTop = scrollTop;
+      }
+      if (chartEl.scrollTop !== scrollTop) {
+        chartEl.scrollTop = scrollTop;
       }
     });
   }
