@@ -137,6 +137,17 @@ thead .sticky-left.h {
 .date-col { width: 36px; text-align: center; }
 .day      { width: 36px; padding: 0; position: relative; }
 
+/* 各列の縦罫線（最終列を除く） */
+.date-col,
+.day {
+  border-right: 1px solid #e5e7eb;
+}
+
+.date-col:last-child,
+.day:last-child {
+  border-right: none;
+}
+
 .day::before {
   content: '';
   position: absolute;
