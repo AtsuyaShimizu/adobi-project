@@ -1,7 +1,37 @@
 <div class="calendar-modal" (click)="close.emit()">
   <div class="dialog" (click)="$event.stopPropagation()">
     <h2>日付選択</h2>
-    <input type="date" [(ngModel)]="selected" />
+    <div class="calendar">
+      <div class="header">
+        <button class="nav" (click)="prevMonth()">&#x2039;</button>
+        <span class="title">{{ displayDate | date: 'y年M月' }}</span>
+        <button class="nav" (click)="nextMonth()">&#x203A;</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            @for (day of ['日', '月', '火', '水', '木', '金', '土']; track day) {
+              <th>{{ day }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (week of weeks; track $index) {
+            <tr>
+              @for (day of week; track day.getTime()) {
+                <td
+                  (click)="select(day)"
+                  [class.other-month]="!isCurrentMonth(day)"
+                  [class.selected]="isSelected(day)"
+                >
+                  {{ day.getDate() }}
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
     <div class="actions">
       <button class="confirm" (click)="submit()">決定</button>
     </div>

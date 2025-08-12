@@ -21,8 +21,8 @@
   text-align: right;
   margin-top: 1rem;
 }
-
-.calendar-modal button {
+ 
+.calendar-modal .actions .confirm {
   background: var(--color-primary);
   border: none;
   color: #fff;
@@ -31,6 +31,50 @@
   cursor: pointer;
 }
 
-.calendar-modal button:hover {
+.calendar-modal .actions .confirm:hover {
   background: #2563eb;
+}
+
+.calendar {
+  margin-top: 1rem;
+}
+
+.calendar .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.calendar .nav {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+}
+
+.calendar table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.calendar th,
+.calendar td {
+  width: 14.285%;
+  text-align: center;
+  padding: 0.3rem 0;
+}
+
+.calendar td {
+  cursor: pointer;
+}
+
+.calendar td.other-month {
+  color: #aaa;
+}
+
+.calendar td.selected {
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 50%;
 }
