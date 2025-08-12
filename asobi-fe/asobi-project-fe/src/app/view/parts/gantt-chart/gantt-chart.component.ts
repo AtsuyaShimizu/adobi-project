@@ -6,7 +6,7 @@ import {
   ElementRef,
   Input,
   OnChanges,
-  ViewChild
+  ViewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Task } from '../../../domain/model/task';
@@ -17,7 +17,7 @@ import { Task } from '../../../domain/model/task';
   imports: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './gantt-chart.component.html',
-  styleUrl: './gantt-chart.component.scss'
+  styleUrl: './gantt-chart.component.scss',
 })
 export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
@@ -42,7 +42,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
 
   get months(): { label: string; days: number }[] {
     const result: { label: string; days: number }[] = [];
-    this.dateRange.forEach(d => {
+    this.dateRange.forEach((d) => {
       const label = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
       const last = result[result.length - 1];
       if (last && last.label === label) {
@@ -76,11 +76,13 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     this.scrollToToday();
   }
 
-  private scrollToToday(): void {
+  scrollToToday(): void {
     if (!this.chartArea) {
       return;
     }
-    const index = this.dateRange.findIndex(d => this.isSameDay(d, this.today));
+    const index = this.dateRange.findIndex((d) =>
+      this.isSameDay(d, this.today),
+    );
     if (index < 0) {
       return;
     }
@@ -100,7 +102,10 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
         taskEl.scrollTop = chartEl.scrollTop;
       }
 
-      if (chartEl.scrollLeft + chartEl.clientWidth >= chartEl.scrollWidth - 100) {
+      if (
+        chartEl.scrollLeft + chartEl.clientWidth >=
+        chartEl.scrollWidth - 100
+      ) {
         this.extendRight(365);
       } else if (chartEl.scrollLeft <= 100) {
         const prevWidth = chartEl.scrollWidth;
@@ -148,7 +153,11 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
 
   private buildDateRange(): void {
     const dates: Date[] = [];
-    for (let d = new Date(this.rangeStart); d <= this.rangeEnd; d.setDate(d.getDate() + 1)) {
+    for (
+      let d = new Date(this.rangeStart);
+      d <= this.rangeEnd;
+      d.setDate(d.getDate() + 1)
+    ) {
       dates.push(new Date(d));
     }
     this.dateRange = dates;
@@ -176,8 +185,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     if (this.tasks.length === 0) {
       return;
     }
-    const taskStart = new Date(Math.min(...this.tasks.map(t => t.start.getTime())));
-    const taskEnd = new Date(Math.max(...this.tasks.map(t => t.end.getTime())));
+    const taskStart = new Date(
+      Math.min(...this.tasks.map((t) => t.start.getTime())),
+    );
+    const taskEnd = new Date(
+      Math.max(...this.tasks.map((t) => t.end.getTime())),
+    );
     if (taskStart < this.rangeStart) {
       this.extendLeft(this.diffDays(taskStart, this.rangeStart));
     }
