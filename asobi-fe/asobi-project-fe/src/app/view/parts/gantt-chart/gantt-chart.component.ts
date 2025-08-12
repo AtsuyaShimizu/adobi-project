@@ -51,8 +51,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   }
 
   isProgress(task: Task, date: Date): boolean {
-    const start = new Date(task.start);
-    const end = new Date(task.end);
+    const start = this.toStartOfDay(task.start);
+    const end = this.toStartOfDay(task.end);
     if (date < start || date > end) {
       return false;
     }
@@ -141,8 +141,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   }
 
   isPlanned(task: Task, date: Date): boolean {
-    const start = new Date(task.start);
-    const end = new Date(task.end);
+    const start = this.toStartOfDay(task.start);
+    const end = this.toStartOfDay(task.end);
     if (date < start || date > end) {
       return false;
     }
@@ -166,6 +166,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return today;
+  }
+
+  private toStartOfDay(date: Date): Date {
+    const result = new Date(date);
+    result.setHours(0, 0, 0, 0);
+    return result;
   }
 
   private buildDateRange(): void {
