@@ -68,6 +68,34 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     return date > progressEnd && date <= end;
   }
 
+  isProgressStart(task: Task, date: Date): boolean {
+    return (
+      this.isProgress(task, date) &&
+      !this.isProgress(task, this.addDays(date, -1))
+    );
+  }
+
+  isProgressEnd(task: Task, date: Date): boolean {
+    return (
+      this.isProgress(task, date) &&
+      !this.isProgress(task, this.addDays(date, 1))
+    );
+  }
+
+  isPlannedStart(task: Task, date: Date): boolean {
+    return (
+      this.isPlanned(task, date) &&
+      !this.isPlanned(task, this.addDays(date, -1))
+    );
+  }
+
+  isPlannedEnd(task: Task, date: Date): boolean {
+    return (
+      this.isPlanned(task, date) &&
+      !this.isPlanned(task, this.addDays(date, 1))
+    );
+  }
+
   protected isMonthStart(date: Date): boolean {
     return date.getDate() === 1;
   }

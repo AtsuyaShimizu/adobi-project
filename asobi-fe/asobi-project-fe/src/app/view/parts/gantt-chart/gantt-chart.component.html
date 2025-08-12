@@ -47,6 +47,10 @@
                   class="day"
                   [class.progress]="isProgress(task, date)"
                   [class.planned]="isPlanned(task, date)"
+                  [class.progress-start]="isProgressStart(task, date)"
+                  [class.progress-end]="isProgressEnd(task, date)"
+                  [class.planned-start]="isPlannedStart(task, date)"
+                  [class.planned-end]="isPlannedEnd(task, date)"
                   [class.month-boundary]="isMonthStart(date) && j !== 0"
                 ></td>
               }
