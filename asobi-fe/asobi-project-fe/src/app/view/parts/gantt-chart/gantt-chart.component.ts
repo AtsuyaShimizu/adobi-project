@@ -22,7 +22,6 @@ import { Task } from '../../../domain/model/task';
 export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
   @ViewChild('chartArea') private chartArea?: ElementRef<HTMLDivElement>;
-  @ViewChild('taskArea') private taskArea?: ElementRef<HTMLDivElement>;
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
   private rangeStart: Date;
@@ -63,7 +62,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
 
   ngAfterViewInit(): void {
     this.scrollToToday();
-    this.setupScrollHandling();
+    this.setupChartScrollHandling();
   }
 
   ngOnChanges(): void {
@@ -76,9 +75,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
       return;
     }
     const today = this.getToday();
-    const index = this.dateRange.findIndex((d) =>
-      this.isSameDay(d, today),
-    );
+    const index = this.dateRange.findIndex((d) => this.isSameDay(d, today));
     if (index < 0) {
       return;
     }
@@ -92,22 +89,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     });
   }
 
-  private setupScrollHandling(): void {
-    if (!this.chartArea || !this.taskArea) {
+  private setupChartScrollHandling(): void {
+    if (!this.chartArea) {
       return;
     }
     const chartEl = this.chartArea.nativeElement;
-    const taskEl = this.taskArea.nativeElement;
-    let isSyncing = false;
-
     chartEl.addEventListener('scroll', () => {
-      if (isSyncing) {
-        return;
-      }
-      isSyncing = true;
-      taskEl.scrollTop = chartEl.scrollTop;
-      setTimeout(() => (isSyncing = false));
-
       if (
         chartEl.scrollLeft + chartEl.clientWidth >=
         chartEl.scrollWidth - 100
@@ -118,15 +105,6 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
         this.extendLeft(365);
         chartEl.scrollLeft += chartEl.scrollWidth - prevWidth;
       }
-    });
-
-    taskEl.addEventListener('scroll', () => {
-      if (isSyncing) {
-        return;
-      }
-      isSyncing = true;
-      chartEl.scrollTop = taskEl.scrollTop;
-      setTimeout(() => (isSyncing = false));
     });
   }
 
