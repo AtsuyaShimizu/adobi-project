@@ -3,13 +3,16 @@
   <div class="content">
     <div class="toolbar">
       <button (click)="openForm.emit()">タスクを追加</button>
+      <button (click)="ganttChart.scrollToToday()">今日に戻る</button>
     </div>
-    <app-gantt-chart [tasks]="tasks"></app-gantt-chart>
+    <app-gantt-chart #ganttChart [tasks]="tasks"></app-gantt-chart>
     @if (formVisible) {
       <div class="task-dialog" (click)="closeForm.emit()">
         <div class="dialog" (click)="$event.stopPropagation()">
           <h2>タスク追加</h2>
-          <app-task-form (save)="create.emit($event); closeForm.emit()"></app-task-form>
+          <app-task-form
+            (save)="create.emit($event); closeForm.emit()"
+          ></app-task-form>
           <div class="actions">
             <button class="close" (click)="closeForm.emit()">閉じる</button>
           </div>
