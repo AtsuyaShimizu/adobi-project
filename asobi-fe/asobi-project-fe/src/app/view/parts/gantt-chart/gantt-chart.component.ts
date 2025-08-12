@@ -36,6 +36,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   private dragData?: { memo: Memo; el: HTMLElement; offsetX: number; offsetY: number };
   private onMove = (e: MouseEvent) => this.handleDrag(e);
   private onUp = () => this.endDrag();
+  private focusedCell?: { x: number; y: number };
 
   constructor(private cdr: ChangeDetectorRef) {
     const start = this.getToday();
@@ -162,6 +163,33 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
         host.scrollLeft += host.scrollWidth - prevWidth;
       }
     });
+  }
+
+  onCellMouseDown(event: MouseEvent): void {
+    const host = this.scrollHost?.nativeElement;
+    const cell = event.currentTarget as HTMLElement | null;
+    if (!host || !cell) return;
+    const hostRect = host.getBoundingClientRect();
+    const cellRect = cell.getBoundingClientRect();
+    this.focusedCell = {
+      x: cellRect.left - hostRect.left + host.scrollLeft,
+      y: cellRect.top - hostRect.top + host.scrollTop,
+    };
+  }
+
+  getFocusedCellPosition(): { x: number; y: number } | null {
+    return this.focusedCell ?? null;
+  }
+
+  getTodayColumnPosition(): { x: number; y: number } {
+    const host = this.scrollHost?.nativeElement;
+    if (!host) return { x: 0, y: 0 };
+    const headerHeight = this.getHeaderHeight(host);
+    const today = this.getToday();
+    const idx = this.dateRange.findIndex((d) => this.isSameDay(d, today));
+    const th = host.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
+    const x = th ? th.offsetLeft : 0;
+    return { x, y: headerHeight };
   }
 
   onMemoMouseDown(event: MouseEvent, memo: Memo): void {
