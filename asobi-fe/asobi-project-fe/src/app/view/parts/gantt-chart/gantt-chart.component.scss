@@ -186,15 +186,41 @@ thead .sticky-left.h {
   border: 1px solid #f87171;
   resize: both;
   overflow: hidden;
+}
+
+.memo.editing {
+  cursor: text;
+}
+
+.memo:not(.editing) {
   cursor: move;
 }
 
 .memo .memo-body {
-  padding: 4px;
+  padding: 20px 4px 4px;
   width: 100%;
   height: 100%;
   overflow: auto;
   outline: none;
-  cursor: text;
+  cursor: inherit;
+}
+
+.memo .edit-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.7);
+  border: none;
+  padding: 2px 4px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.memo .edit-button .icon {
+  width: 12px;
+  height: 12px;
+  margin-right: 2px;
 }
 

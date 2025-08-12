@@ -75,24 +75,33 @@
         }
       </tbody>
     </table>
-    <div class="memo-layer">
-      @for (memo of memos; track memo.id) {
-        <div
-          class="memo"
-          [style.left.px]="memo.x"
-          [style.top.px]="memo.y"
-          [style.width.px]="memo.width"
-          [style.height.px]="memo.height"
-          (mousedown)="onMemoMouseDown($event, memo)"
-          (mouseup)="onMemoMouseUp($event, memo)"
-        >
+      <div class="memo-layer">
+        @for (memo of memos; track memo.id) {
           <div
-            class="memo-body"
-            contenteditable
-            (blur)="onMemoBlur($event, memo)"
-          >{{ memo.text }}</div>
-        </div>
-      }
-    </div>
+            class="memo"
+            [class.editing]="editingMemoId === memo.id"
+            [style.left.px]="memo.x"
+            [style.top.px]="memo.y"
+            [style.width.px]="memo.width"
+            [style.height.px]="memo.height"
+            (mousedown)="onMemoMouseDown($event, memo)"
+            (mouseup)="onMemoMouseUp($event, memo)"
+          >
+            <button
+              class="edit-button"
+              (click)="startEdit(memo, memoBody, $event)"
+            >
+              <img src="edit.svg" alt="" class="icon" />
+              <span>編集</span>
+            </button>
+            <div
+              #memoBody
+              class="memo-body"
+              [attr.contenteditable]="editingMemoId === memo.id ? 'true' : null"
+              (blur)="onMemoBlur($event, memo)"
+            >{{ memo.text }}</div>
+          </div>
+        }
+      </div>
   </div>
 </div>
