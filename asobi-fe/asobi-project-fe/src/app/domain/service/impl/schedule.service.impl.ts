@@ -8,6 +8,7 @@ import { ScheduleState } from '../../state/local/schedule.state';
 export class ScheduleService implements ScheduleServiceInterface {
   #repository = inject(ScheduleRepository);
   #state = inject(ScheduleState);
+  readonly tasks = this.#state.tasks;
 
   async load(): Promise<void> {
     const tasks = await this.#repository.findAll();

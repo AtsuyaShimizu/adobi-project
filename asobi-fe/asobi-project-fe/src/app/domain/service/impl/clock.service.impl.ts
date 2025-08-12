@@ -5,6 +5,7 @@ import { ClockState } from '../../state/global/clock.state';
 @Injectable({ providedIn: 'root' })
 export class ClockService implements ClockServiceInterface {
   #state = inject(ClockState);
+  readonly now = this.#state.now;
 
   start(): void {
     this.#update();
