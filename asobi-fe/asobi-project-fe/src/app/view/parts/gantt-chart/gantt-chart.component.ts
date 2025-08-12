@@ -33,6 +33,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   protected dateRange: Date[] = [];
   private rangeStart: Date;
   private rangeEnd: Date;
+  private static readonly INITIAL_RANGE_DAYS = 90;
+  private static readonly EXTEND_DAYS = 30;
   private dragData?: { memo: Memo; el: HTMLElement; offsetX: number; offsetY: number };
   private onMove = (e: MouseEvent) => this.handleDrag(e);
   private onUp = () => this.endDrag();
@@ -51,8 +53,14 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
 
   constructor(private cdr: ChangeDetectorRef) {
     const start = this.getToday();
-    this.rangeStart = this.addDays(start, -365);
-    this.rangeEnd = this.addDays(start, 365);
+    this.rangeStart = this.addDays(
+      start,
+      -GanttChartComponent.INITIAL_RANGE_DAYS,
+    );
+    this.rangeEnd = this.addDays(
+      start,
+      GanttChartComponent.INITIAL_RANGE_DAYS,
+    );
     this.buildDateRange();
   }
 
@@ -138,8 +146,10 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     if (!host) return;
 
     const target = this.toStartOfDay(date);
-    while (target < this.rangeStart) this.extendLeft(365);
-    while (target > this.rangeEnd) this.extendRight(365);
+    while (target < this.rangeStart)
+      this.extendLeft(GanttChartComponent.EXTEND_DAYS);
+    while (target > this.rangeEnd)
+      this.extendRight(GanttChartComponent.EXTEND_DAYS);
 
     const idx = this.dateRange.findIndex((d) => this.isSameDay(d, target));
     if (idx < 0) return;
@@ -167,10 +177,10 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
 
     host.addEventListener('scroll', () => {
       if (host.scrollLeft + host.clientWidth >= host.scrollWidth - 100) {
-        this.extendRight(365);
+        this.extendRight(GanttChartComponent.EXTEND_DAYS);
       } else if (host.scrollLeft <= 100) {
         const prevWidth = host.scrollWidth;
-        this.extendLeft(365);
+        this.extendLeft(GanttChartComponent.EXTEND_DAYS);
         host.scrollLeft += host.scrollWidth - prevWidth;
       }
     });
