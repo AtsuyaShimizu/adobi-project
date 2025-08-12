@@ -13,9 +13,9 @@
         </tr>
       </thead>
       <tbody>
-        @if (tasks.length > 0) {
-          @for (task of tasks; track task.id) {
-            <tr>
+        @for (row of emptyRows; track $index; let i = $index) {
+          <tr>
+            @if (tasks[i]; as task) {
               <td class="type-col">{{ task.type }}</td>
               <td class="name-col">{{ task.name }}</td>
               <td class="detail-col">{{ task.detail }}</td>
@@ -23,11 +23,7 @@
               <td class="start-col">{{ task.start | date:'yyyy-MM-dd' }}</td>
               <td class="end-col">{{ task.end | date:'yyyy-MM-dd' }}</td>
               <td class="progress-col">{{ task.progress }}%</td>
-            </tr>
-          }
-        } @else {
-          @for (row of emptyRows; track $index) {
-            <tr>
+            } @else {
               <td class="type-col"></td>
               <td class="name-col"></td>
               <td class="detail-col"></td>
@@ -35,8 +31,8 @@
               <td class="start-col"></td>
               <td class="end-col"></td>
               <td class="progress-col"></td>
-            </tr>
-          }
+            }
+          </tr>
         }
       </tbody>
     </table>
@@ -56,22 +52,18 @@
         </tr>
       </thead>
       <tbody>
-        @if (tasks.length > 0) {
-          @for (task of tasks; track task.id) {
-            <tr>
+        @for (row of emptyRows; track $index; let i = $index) {
+          <tr>
+            @if (tasks[i]; as task) {
               @for (date of dateRange; track $index) {
                 <td class="day" [class.progress]="isProgress(task, date)" [class.planned]="isPlanned(task, date)"></td>
               }
-            </tr>
-          }
-        } @else {
-          @for (row of emptyRows; track $index) {
-            <tr>
+            } @else {
               @for (date of dateRange; track $index) {
                 <td class="day"></td>
               }
-            </tr>
-          }
+            }
+          </tr>
         }
       </tbody>
     </table>
