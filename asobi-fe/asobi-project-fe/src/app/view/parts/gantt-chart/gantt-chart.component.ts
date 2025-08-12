@@ -4,12 +4,16 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  EventEmitter,
   Input,
   OnChanges,
+  SimpleChanges,
+  Output,
   ViewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Task } from '../../../domain/model/task';
+import { Memo } from '../../../domain/model/memo';
 
 @Component({
   selector: 'app-gantt-chart',
@@ -21,12 +25,17 @@ import { Task } from '../../../domain/model/task';
 })
 export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
+  @Input({ required: true }) memos: Memo[] = [];
+  @Output() memoChange = new EventEmitter<Memo>();
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
 
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
   private rangeStart: Date;
   private rangeEnd: Date;
+  private dragData?: { memo: Memo; el: HTMLElement; offsetX: number; offsetY: number };
+  private onMove = (e: MouseEvent) => this.handleDrag(e);
+  private onUp = () => this.endDrag();
 
   constructor(private cdr: ChangeDetectorRef) {
     const start = this.getToday();
@@ -105,9 +114,11 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     this.setupScrollHandling();
   }
 
-  ngOnChanges(): void {
-    this.ensureTaskRange();
-    this.scrollToToday();
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['tasks']) {
+      this.ensureTaskRange();
+      this.scrollToToday();
+    }
   }
 
   public scrollToDate(date: Date): void {
@@ -151,6 +162,71 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
         host.scrollLeft += host.scrollWidth - prevWidth;
       }
     });
+  }
+
+  onMemoMouseDown(event: MouseEvent, memo: Memo): void {
+    const target = event.target as HTMLElement;
+    if (target.classList.contains('memo-body')) return;
+    const el = target.closest('.memo') as HTMLElement;
+    if (!el) return;
+    this.dragData = { memo, el, offsetX: event.offsetX, offsetY: event.offsetY };
+    document.addEventListener('mousemove', this.onMove);
+    document.addEventListener('mouseup', this.onUp);
+    event.preventDefault();
+  }
+
+  onMemoBlur(memo: Memo, el: HTMLElement): void {
+    memo.text = el.innerText;
+    memo.width = el.offsetWidth;
+    memo.height = el.offsetHeight;
+    this.memoChange.emit({ ...memo });
+  }
+
+  onMemoMouseUp(memo: Memo, el: HTMLElement): void {
+    if (this.dragData) return;
+    memo.width = el.offsetWidth;
+    memo.height = el.offsetHeight;
+    memo.text = el.innerText;
+    this.memoChange.emit({ ...memo });
+  }
+
+  private handleDrag(event: MouseEvent): void {
+    if (!this.dragData) return;
+    const host = this.scrollHost?.nativeElement;
+    if (!host) return;
+    const rect = host.getBoundingClientRect();
+    const stickyWidth = this.getStickyWidth(host);
+    const headerHeight = this.getHeaderHeight(host);
+    const x = event.clientX - rect.left - this.dragData.offsetX;
+    const y = event.clientY - rect.top - this.dragData.offsetY;
+    const maxX = host.scrollWidth - this.dragData.el.offsetWidth;
+    const maxY = host.scrollHeight - this.dragData.el.offsetHeight;
+    this.dragData.memo.x = Math.min(Math.max(x, stickyWidth), maxX);
+    this.dragData.memo.y = Math.min(Math.max(y, headerHeight), maxY);
+    this.cdr.markForCheck();
+  }
+
+  private endDrag(): void {
+    if (!this.dragData) return;
+    const { memo, el } = this.dragData;
+    memo.width = el.offsetWidth;
+    memo.height = el.offsetHeight;
+    memo.text = el.innerText;
+    this.memoChange.emit({ ...memo });
+    this.dragData = undefined;
+    document.removeEventListener('mousemove', this.onMove);
+    document.removeEventListener('mouseup', this.onUp);
+  }
+
+  private getStickyWidth(host: HTMLElement): number {
+    const stickyCols = host.querySelectorAll<HTMLElement>('.head-1 .sticky-left');
+    return Array.from(stickyCols).reduce((sum, el) => sum + el.offsetWidth, 0);
+  }
+
+  private getHeaderHeight(host: HTMLElement): number {
+    const head1 = host.querySelector<HTMLElement>('.head-1');
+    const head2 = host.querySelector<HTMLElement>('.head-2');
+    return (head1?.offsetHeight ?? 0) + (head2?.offsetHeight ?? 0);
   }
 
   private diffDays(a: Date, b: Date): number {

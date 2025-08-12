@@ -6,17 +6,32 @@
         <img src="add.svg" alt="" class="icon" />
         <span>タスクを追加</span>
       </button>
+      <button class="add-memo" (click)="openMemo.emit()">
+        <img src="note.svg" alt="" class="icon" />
+        <span>メモを追加</span>
+      </button>
       <button class="open-calendar" (click)="openCalendar.emit()">
         <img src="calendar.svg" alt="" class="icon" />
         <span>カレンダー</span>
       </button>
     </div>
-    <app-gantt-chart #ganttChart [tasks]="tasks"></app-gantt-chart>
+    <app-gantt-chart
+      #ganttChart
+      [tasks]="tasks"
+      [memos]="memos"
+      (memoChange)="memoChange.emit($event)"
+    ></app-gantt-chart>
     @if (calendarVisible) {
       <app-calendar-modal
         (confirm)="onCalendarConfirm($event)"
         (close)="closeCalendar.emit()"
       ></app-calendar-modal>
+    }
+    @if (memoVisible) {
+      <app-memo-modal
+        (confirm)="memoCreate.emit($event)"
+        (close)="closeMemo.emit()"
+      ></app-memo-modal>
     }
     @if (formVisible) {
       <div class="task-dialog" (click)="closeForm.emit()">

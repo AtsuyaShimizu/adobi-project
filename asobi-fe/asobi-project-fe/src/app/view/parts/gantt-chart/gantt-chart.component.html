@@ -70,5 +70,24 @@
         }
       </tbody>
     </table>
+    <div class="memo-layer">
+      @for (memo of memos; track memo.id) {
+        <div
+          class="memo"
+          [style.left.px]="memo.x"
+          [style.top.px]="memo.y"
+          [style.width.px]="memo.width"
+          [style.height.px]="memo.height"
+          (mousedown)="onMemoMouseDown($event, memo)"
+          (mouseup)="onMemoMouseUp(memo, $event.currentTarget as HTMLElement)"
+        >
+          <div
+            class="memo-body"
+            contenteditable
+            (blur)="onMemoBlur(memo, $event.target as HTMLElement)"
+          >{{ memo.text }}</div>
+        </div>
+      }
+    </div>
   </div>
 </div>
