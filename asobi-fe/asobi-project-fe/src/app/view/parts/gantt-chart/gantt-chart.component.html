@@ -19,7 +19,7 @@
 
         <!-- 2行目：日付 -->
         <tr class="head-2">
-          @for (date of dateRange; track $index; let i = $index) {
+          @for (date of dateRange; track date; let i = $index) {
             <th
               class="h date-col"
               [attr.data-idx]="i"
@@ -42,7 +42,7 @@
               <td class="sticky-left col-end">{{ task.end | date : 'yyyy-MM-dd' }}</td>
               <td class="sticky-left col-progress">{{ task.progress }}%</td>
 
-              @for (date of dateRange; track $index; let j = $index) {
+              @for (date of dateRange; track date; let j = $index) {
                 <td
                   class="day"
                   [class.progress]="isProgress(task, date)"
@@ -62,7 +62,7 @@
               <td class="sticky-left col-end"></td>
               <td class="sticky-left col-progress"></td>
 
-              @for (date of dateRange; track $index; let j = $index) {
+              @for (date of dateRange; track date; let j = $index) {
                 <td class="day" [class.month-boundary]="isMonthStart(date) && j !== 0"></td>
               }
             }
