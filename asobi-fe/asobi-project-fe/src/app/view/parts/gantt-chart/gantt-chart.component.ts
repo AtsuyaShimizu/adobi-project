@@ -226,8 +226,17 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     this.memoChange.emit({ ...memo });
   }
 
-  protected startEdit(memo: Memo, el: HTMLElement, event: MouseEvent): void {
+  protected toggleEdit(
+    memo: Memo,
+    el: HTMLElement,
+    event: MouseEvent,
+  ): void {
     event.stopPropagation();
+    event.preventDefault();
+    if (this.editingMemoId === memo.id) {
+      el.blur();
+      return;
+    }
     this.editingMemoId = memo.id;
     setTimeout(() => el.focus());
   }

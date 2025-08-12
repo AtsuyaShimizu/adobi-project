@@ -87,13 +87,13 @@
             (mousedown)="onMemoMouseDown($event, memo)"
             (mouseup)="onMemoMouseUp($event, memo)"
           >
-            <button
-              class="edit-button"
-              (click)="startEdit(memo, memoBody, $event)"
-            >
-              <img src="edit.svg" alt="" class="icon" />
-              <span>編集</span>
-            </button>
+              <button
+                class="edit-button"
+                (mousedown)="toggleEdit(memo, memoBody, $event)"
+              >
+                <img src="edit.svg" alt="" class="icon" />
+                <span>編集</span>
+              </button>
             <div
               #memoBody
               class="memo-body"
