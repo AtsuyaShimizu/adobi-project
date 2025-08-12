@@ -92,7 +92,14 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
 
     requestAnimationFrame(() => {
       const th = host.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
-      if (th) host.scrollLeft = th.offsetLeft;
+      const stickyCols = host.querySelectorAll<HTMLElement>(
+        '.head-1 .sticky-left'
+      );
+      const stickyWidth = Array.from(stickyCols).reduce(
+        (sum, el) => sum + el.offsetWidth,
+        0
+      );
+      if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
     });
   }
 
