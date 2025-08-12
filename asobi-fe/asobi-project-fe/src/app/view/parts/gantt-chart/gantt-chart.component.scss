@@ -70,16 +70,16 @@
 
 /* 1行目（月） */
 .gantt-table thead .head-1 .h {
-  top: 0;               /* 常に上に固定 */
+  top: 0; /* 常に上に固定 */
   height: var(--head1);
   line-height: var(--head1);
-  z-index: 12;          /* 2行目より前面 */
+  z-index: 12; /* 2行目より前面 */
   border-bottom: 1px solid #d1d5db;
 }
 
 /* 2行目（日付） */
 .gantt-table thead .head-2 .h {
-  top: var(--head1);    /* 1行目の下に固定 */
+  top: var(--head1); /* 1行目の下に固定 */
   height: var(--head2);
   line-height: var(--head2);
   z-index: 11;
@@ -91,19 +91,21 @@
 }
 
 /* 月ヘッダーは z-index 11（指示どおり） */
-.gantt-table thead .head-1 .h.month { z-index: 11; }
+.gantt-table thead .head-1 .h.month {
+  z-index: 11;
+}
 
 /* 左6列のヘッダー（rowspan=2）は最前面＆ヘッダー色を維持 */
 thead .sticky-left.h {
-  z-index: 100 !important;         /* ボディより上に確実に */
-  background: #f3f4f6 !important;  /* ヘッダー色を優先 */
+  z-index: 100 !important; /* ボディより上に確実に */
+  background: #f3f4f6 !important; /* ヘッダー色を優先 */
 }
 
 /* 左固定列（ヘッダー/ボディ共通） */
 .sticky-left {
   position: sticky;
-  background: var(--color-surface);   /* ボディ側は白（ヘッダーは上で上書き） */
-  z-index: 20;        /* ボディ左列の基準層 */
+  background: var(--color-surface); /* ボディ側は白（ヘッダーは上で上書き） */
+  z-index: 20; /* ボディ左列の基準層 */
   border-right: 1px solid #e5e7eb;
 }
 
@@ -113,12 +115,36 @@ thead .sticky-left.h {
 }
 
 /* 列幅と固定位置 */
-.col-type     { min-width: var(--w-type);     width: var(--w-type);     left: var(--left-type); }
-.col-name     { min-width: var(--w-name);     width: var(--w-name);     left: var(--left-name); }
-.col-assignee { min-width: var(--w-assignee); width: var(--w-assignee); left: var(--left-assignee); }
-.col-start    { min-width: var(--w-start);    width: var(--w-start);    left: var(--left-start); }
-.col-end      { min-width: var(--w-end);      width: var(--w-end);      left: var(--left-end); }
-.col-progress { min-width: var(--w-progress); width: var(--w-progress); left: var(--left-progress); }
+.col-type {
+  min-width: var(--w-type);
+  width: var(--w-type);
+  left: var(--left-type);
+}
+.col-name {
+  min-width: var(--w-name);
+  width: var(--w-name);
+  left: var(--left-name);
+}
+.col-assignee {
+  min-width: var(--w-assignee);
+  width: var(--w-assignee);
+  left: var(--left-assignee);
+}
+.col-start {
+  min-width: var(--w-start);
+  width: var(--w-start);
+  left: var(--left-start);
+}
+.col-end {
+  min-width: var(--w-end);
+  width: var(--w-end);
+  left: var(--left-end);
+}
+.col-progress {
+  min-width: var(--w-progress);
+  width: var(--w-progress);
+  left: var(--left-progress);
+}
 
 /* ---------------- ボディ行 ---------------- */
 .gantt-table tbody tr {
@@ -137,8 +163,15 @@ thead .sticky-left.h {
 }
 
 /* 日付列のヘッダー/ボディ幅 */
-.date-col { width: 36px; text-align: center; }
-.day      { width: 36px; padding: 0; position: relative; }
+.date-col {
+  width: 36px;
+  text-align: center;
+}
+.day {
+  width: 36px;
+  padding: 0;
+  position: relative;
+}
 
 /* 各列の縦罫線（最終列を除く） */
 .date-col,
@@ -152,7 +185,7 @@ thead .sticky-left.h {
 }
 
 .day::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 20%;
   bottom: 20%;
@@ -162,16 +195,34 @@ thead .sticky-left.h {
   background: transparent;
 }
 
-.day.progress::before { background-color: var(--color-primary, #3b82f6); }
-.day.planned::before  { background-color: rgba(59, 130, 246, 0.3); }
+.day.progress::before {
+  background-color: var(--color-primary, #3b82f6);
+}
+.day.planned::before {
+  background-color: rgba(59, 130, 246, 0.3);
+}
 
-.day.progress-start::before { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
-.day.progress-end::before   { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
-.day.planned-start::before  { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
-.day.planned-end::before    { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+.day.progress-start::before {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+.day.progress-end::before {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+.day.planned-start::before {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+.day.planned-end::before {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
 
 /* 月境界の強線 */
-.month-boundary { border-left: 2px solid #9ca3af !important; }
+.month-boundary {
+  border-left: 2px solid #9ca3af !important;
+}
 
 /* ---------------- メモ ---------------- */
 .memo-layer {
@@ -182,10 +233,24 @@ thead .sticky-left.h {
 
 .memo {
   position: absolute;
-  background: #fee2e2;
-  border: 1px solid #f87171;
+  background: #fef9c3;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: none;
   resize: both;
   overflow: hidden;
+}
+
+.memo::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-bottom: 20px solid #fde68a;
+  box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
 }
 
 .memo.editing {
@@ -223,4 +288,3 @@ thead .sticky-left.h {
   height: 12px;
   margin-right: 2px;
 }
-
