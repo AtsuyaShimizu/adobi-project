@@ -13,7 +13,7 @@
 }
 
 .task-area {
-  flex: 0 0 780px;
+  flex: 0 0 710px;
   overflow-x: hidden;
   overflow-y: auto;
   height: 100%;
@@ -50,6 +50,8 @@ td {
   padding: 4px;
   text-align: center;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .task-table tbody tr,
@@ -96,17 +98,12 @@ td {
   padding: 0 4px;
 }
 
-.chart-table thead tr:first-child th:not(:first-child) {
-  border-left: 2px solid #9ca3af;
-}
-
-.type-col { min-width: 100px; }
-.name-col { min-width: 120px; }
-.detail-col { min-width: 180px; }
-.assignee-col { min-width: 80px; }
-.start-col { min-width: 110px; }
-.end-col { min-width: 110px; }
-.progress-col { min-width: 80px; }
+.type-col { min-width: 150px; width: 150px; }
+.name-col { min-width: 200px; width: 200px; }
+.assignee-col { min-width: 80px; width: 80px; }
+.start-col { min-width: 110px; width: 110px; }
+.end-col { min-width: 110px; width: 110px; }
+.progress-col { min-width: 60px; width: 60px; }
 
 .day {
   width: 36px;
