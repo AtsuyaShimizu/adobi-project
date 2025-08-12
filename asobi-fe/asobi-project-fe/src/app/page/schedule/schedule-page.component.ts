@@ -16,6 +16,7 @@ export class SchedulePageComponent implements OnInit {
   #clockService = inject(ClockService);
   protected tasks = this.#scheduleService.tasks;
   protected isFormVisible = signal(false);
+  protected isCalendarVisible = signal(false);
   protected dateTime = this.#clockService.now;
 
   ngOnInit(): void {
@@ -29,6 +30,14 @@ export class SchedulePageComponent implements OnInit {
 
   closeForm(): void {
     this.isFormVisible.set(false);
+  }
+
+  openCalendar(): void {
+    this.isCalendarVisible.set(true);
+  }
+
+  closeCalendar(): void {
+    this.isCalendarVisible.set(false);
   }
 
   onCreate(task: Task): void {

@@ -1,7 +1,10 @@
 <app-schedule-layout
   [tasks]="tasks()"
   [formVisible]="isFormVisible()"
+  [calendarVisible]="isCalendarVisible()"
   [dateTime]="dateTime()"
   (openForm)="openForm()"
   (closeForm)="closeForm()"
+  (openCalendar)="openCalendar()"
+  (closeCalendar)="closeCalendar()"
   (create)="onCreate($event)"></app-schedule-layout>

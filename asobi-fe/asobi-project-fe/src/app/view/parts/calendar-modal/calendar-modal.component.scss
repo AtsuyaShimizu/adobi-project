@@ -1,0 +1,36 @@
+.calendar-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.calendar-modal .dialog {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 280px;
+  max-width: 90%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-modal .actions {
+  text-align: right;
+  margin-top: 1rem;
+}
+
+.calendar-modal button {
+  background: var(--color-primary);
+  border: none;
+  color: #fff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.calendar-modal button:hover {
+  background: #2563eb;
+}

@@ -1,0 +1,9 @@
+<div class="calendar-modal" (click)="close.emit()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <h2>日付選択</h2>
+    <input type="date" [(ngModel)]="selected" />
+    <div class="actions">
+      <button class="confirm" (click)="submit()">決定</button>
+    </div>
+  </div>
+</div>

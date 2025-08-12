@@ -6,12 +6,17 @@
         <img src="add.svg" alt="" class="icon" />
         タスクを追加
       </button>
-      <button class="to-today secondary" (click)="ganttChart.scrollToToday()">
-        <img src="today.svg" alt="" class="icon" />
-        今日に戻る
+      <button class="open-calendar secondary" (click)="openCalendar.emit()">
+        <img src="calendar.svg" alt="カレンダーを開く" class="icon" />
       </button>
     </div>
     <app-gantt-chart #ganttChart [tasks]="tasks"></app-gantt-chart>
+    @if (calendarVisible) {
+      <app-calendar-modal
+        (confirm)="onCalendarConfirm($event)"
+        (close)="closeCalendar.emit()"
+      ></app-calendar-modal>
+    }
     @if (formVisible) {
       <div class="task-dialog" (click)="closeForm.emit()">
         <div class="dialog" (click)="$event.stopPropagation()">

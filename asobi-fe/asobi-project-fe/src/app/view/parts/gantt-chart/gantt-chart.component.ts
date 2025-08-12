@@ -82,12 +82,15 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     this.scrollToToday();
   }
 
-  private scrollToToday(): void {
+  public scrollToDate(date: Date): void {
     const host = this.scrollHost?.nativeElement;
     if (!host) return;
 
-    const today = this.getToday();
-    const idx = this.dateRange.findIndex((d) => this.isSameDay(d, today));
+    const target = this.toStartOfDay(date);
+    while (target < this.rangeStart) this.extendLeft(365);
+    while (target > this.rangeEnd) this.extendRight(365);
+
+    const idx = this.dateRange.findIndex((d) => this.isSameDay(d, target));
     if (idx < 0) return;
 
     requestAnimationFrame(() => {
@@ -101,6 +104,10 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
       );
       if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
     });
+  }
+
+  public scrollToToday(): void {
+    this.scrollToDate(this.getToday());
   }
 
   private setupScrollHandling(): void {
