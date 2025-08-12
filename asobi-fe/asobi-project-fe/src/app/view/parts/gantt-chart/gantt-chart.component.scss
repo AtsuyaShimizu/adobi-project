@@ -106,7 +106,7 @@ thead .sticky-left.h {
   position: sticky;
   background: var(--color-surface); /* ボディ側は白（ヘッダーは上で上書き） */
   z-index: 20; /* ボディ左列の基準層 */
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid #b0b0b0;
 }
 
 /* タスク情報列と日付部分の境界線 */
