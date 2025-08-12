@@ -87,6 +87,7 @@
             (mousedown)="onMemoMouseDown($event, memo)"
             (mouseup)="onMemoMouseUp($event, memo)"
           >
+            <div class="memo-content">
               <button
                 class="edit-button"
                 (mousedown)="toggleEdit(memo, memoBody, $event)"
@@ -94,12 +95,13 @@
                 <img src="edit.svg" alt="" class="icon" />
                 <span>編集</span>
               </button>
-            <div
-              #memoBody
-              class="memo-body"
-              [attr.contenteditable]="editingMemoId === memo.id ? 'true' : null"
-              (blur)="onMemoBlur($event, memo)"
-            >{{ memo.text }}</div>
+              <div
+                #memoBody
+                class="memo-body"
+                [attr.contenteditable]="editingMemoId === memo.id ? 'true' : null"
+                (blur)="onMemoBlur($event, memo)"
+              >{{ memo.text }}</div>
+            </div>
           </div>
         }
       </div>
