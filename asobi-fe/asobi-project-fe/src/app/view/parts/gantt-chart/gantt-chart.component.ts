@@ -37,6 +37,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   private onMove = (e: MouseEvent) => this.handleDrag(e);
   private onUp = () => this.endDrag();
   private focusedCell?: { x: number; y: number };
+  protected editingMemoId: string | null = null;
 
   constructor(private cdr: ChangeDetectorRef) {
     const start = this.getToday();
@@ -193,11 +194,13 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   }
 
   onMemoMouseDown(event: MouseEvent, memo: Memo): void {
-    const target = event.target as HTMLElement;
-    if (target.classList.contains('memo-body')) return;
-    const el = target.closest('.memo') as HTMLElement;
+    if (this.editingMemoId === memo.id) return;
+    const el = event.currentTarget as HTMLElement | null;
     if (!el) return;
-    this.dragData = { memo, el, offsetX: event.offsetX, offsetY: event.offsetY };
+    const rect = el.getBoundingClientRect();
+    const offsetX = event.clientX - rect.left;
+    const offsetY = event.clientY - rect.top;
+    this.dragData = { memo, el, offsetX, offsetY };
     document.addEventListener('mousemove', this.onMove);
     document.addEventListener('mouseup', this.onUp);
     event.preventDefault();
@@ -210,6 +213,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     memo.width = el.offsetWidth;
     memo.height = el.offsetHeight;
     this.memoChange.emit({ ...memo });
+    this.editingMemoId = null;
   }
 
   onMemoMouseUp(event: MouseEvent, memo: Memo): void {
@@ -220,6 +224,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     memo.height = el.offsetHeight;
     memo.text = el.innerText;
     this.memoChange.emit({ ...memo });
+  }
+
+  protected startEdit(memo: Memo, el: HTMLElement, event: MouseEvent): void {
+    event.stopPropagation();
+    this.editingMemoId = memo.id;
+    setTimeout(() => el.focus());
   }
 
   private handleDrag(event: MouseEvent): void {
