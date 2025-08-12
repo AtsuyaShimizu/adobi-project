@@ -22,8 +22,6 @@ import { Task } from '../../../domain/model/task';
 export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
   @ViewChild('chartArea') private chartArea?: ElementRef<HTMLDivElement>;
-  @ViewChild('taskArea') private taskArea?: ElementRef<HTMLDivElement>;
-
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
   private rangeStart: Date;
@@ -64,7 +62,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
 
   ngAfterViewInit(): void {
     this.scrollToToday();
-    this.setupScrollSync();
+    this.setupScrollHandling();
   }
 
   ngOnChanges(): void {
@@ -93,22 +91,13 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     });
   }
 
-  private setupScrollSync(): void {
-    if (!this.chartArea || !this.taskArea) {
+  private setupScrollHandling(): void {
+    if (!this.chartArea) {
       return;
     }
     const chartEl = this.chartArea.nativeElement;
-    const taskEl = this.taskArea.nativeElement;
 
     chartEl.addEventListener('scroll', () => {
-      const scrollTop = Math.round(chartEl.scrollTop);
-      if (chartEl.scrollTop !== scrollTop) {
-        chartEl.scrollTop = scrollTop;
-      }
-      if (taskEl.scrollTop !== scrollTop) {
-        taskEl.scrollTop = scrollTop;
-      }
-
       if (
         chartEl.scrollLeft + chartEl.clientWidth >=
         chartEl.scrollWidth - 100
@@ -118,16 +107,6 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
         const prevWidth = chartEl.scrollWidth;
         this.extendLeft(365);
         chartEl.scrollLeft += chartEl.scrollWidth - prevWidth;
-      }
-    });
-
-    taskEl.addEventListener('scroll', () => {
-      const scrollTop = Math.round(taskEl.scrollTop);
-      if (taskEl.scrollTop !== scrollTop) {
-        taskEl.scrollTop = scrollTop;
-      }
-      if (chartEl.scrollTop !== scrollTop) {
-        chartEl.scrollTop = scrollTop;
       }
     });
   }
