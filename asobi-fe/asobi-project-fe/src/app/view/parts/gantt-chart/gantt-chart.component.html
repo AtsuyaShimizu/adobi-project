@@ -77,36 +77,15 @@
     </table>
       <div class="memo-layer">
         @for (memo of memos; track memo.id) {
-          <div
-            class="memo"
-            [class.editing]="editingMemoId === memo.id"
-            [style.left.px]="memo.x"
-            [style.top.px]="memo.y"
-            [style.width.px]="memo.width"
-            [style.height.px]="memo.height"
-            (mousedown)="onMemoMouseDown($event, memo)"
-            (mouseup)="onMemoMouseUp($event, memo)"
-          >
-            <div class="memo-content">
-              <button
-                class="edit-button"
-                (mousedown)="toggleEdit(memo, memoBody, $event)"
-              >
-                <img src="edit.svg" alt="" class="icon" />
-                <span>編集</span>
-              </button>
-              <div
-                #memoBody
-                class="memo-body"
-                [attr.contenteditable]="editingMemoId === memo.id ? 'true' : null"
-                (blur)="onMemoBlur($event, memo)"
-              >{{ memo.text }}</div>
-            </div>
-            <div
-              class="resize-handle"
-              (mousedown)="onMemoResizeMouseDown($event, memo)"
-            ></div>
-          </div>
+          <app-memo
+            [memo]="memo"
+            [editing]="editingMemoId === memo.id"
+            (memoMouseDown)="onMemoMouseDown($event, memo)"
+            (memoMouseUp)="onMemoMouseUp($event, memo)"
+            (memoResizeMouseDown)="onMemoResizeMouseDown($event, memo)"
+            (memoBlur)="onMemoBlur($event, memo)"
+            (editToggle)="toggleEdit(memo, $event.el, $event.event)"
+          ></app-memo>
         }
       </div>
   </div>

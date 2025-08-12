@@ -14,11 +14,12 @@ import {
 import { DatePipe } from '@angular/common';
 import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
+import { MemoComponent } from '../memo/memo.component';
 
 @Component({
   selector: 'app-gantt-chart',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, MemoComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './gantt-chart.component.html',
   styleUrl: './gantt-chart.component.scss',
