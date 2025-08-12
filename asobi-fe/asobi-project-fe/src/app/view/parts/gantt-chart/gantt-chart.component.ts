@@ -222,7 +222,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     if (!el) return;
     memo.width = el.offsetWidth;
     memo.height = el.offsetHeight;
-    memo.text = el.innerText;
+    memo.text = this.getMemoBodyText(el);
     this.memoChange.emit({ ...memo });
   }
 
@@ -264,11 +264,15 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     const { memo, el } = this.dragData;
     memo.width = el.offsetWidth;
     memo.height = el.offsetHeight;
-    memo.text = el.innerText;
+    memo.text = this.getMemoBodyText(el);
     this.memoChange.emit({ ...memo });
     this.dragData = undefined;
     document.removeEventListener('mousemove', this.onMove);
     document.removeEventListener('mouseup', this.onUp);
+  }
+
+  private getMemoBodyText(el: HTMLElement): string {
+    return el.querySelector<HTMLElement>('.memo-body')?.innerText ?? '';
   }
 
   private getStickyWidth(host: HTMLElement): number {
