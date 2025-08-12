@@ -83,8 +83,14 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     if (index < 0) {
       return;
     }
-    const dayWidth = 38; // cell width + border
-    this.chartArea.nativeElement.scrollLeft = index * dayWidth;
+    requestAnimationFrame(() => {
+      const chartEl = this.chartArea!.nativeElement;
+      const selector = `.chart-table tbody tr:first-child td:nth-child(${index + 1})`;
+      const cell = chartEl.querySelector<HTMLTableCellElement>(selector);
+      if (cell) {
+        chartEl.scrollLeft = cell.offsetLeft;
+      }
+    });
   }
 
   private setupScrollSync(): void {
