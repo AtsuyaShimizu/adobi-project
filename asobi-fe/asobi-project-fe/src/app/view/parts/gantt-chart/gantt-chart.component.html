@@ -5,7 +5,6 @@
         <tr>
           <th class="type-col">タスク分類</th>
           <th class="name-col">タスク名</th>
-          <th class="detail-col">タスク詳細</th>
           <th class="assignee-col">担当者</th>
           <th class="start-col">開始日</th>
           <th class="end-col">終了日</th>
@@ -18,7 +17,6 @@
             @if (tasks[i]; as task) {
               <td class="type-col">{{ task.type }}</td>
               <td class="name-col">{{ task.name }}</td>
-              <td class="detail-col">{{ task.detail }}</td>
               <td class="assignee-col">{{ task.assignee }}</td>
               <td class="start-col">{{ task.start | date:'yyyy-MM-dd' }}</td>
               <td class="end-col">{{ task.end | date:'yyyy-MM-dd' }}</td>
@@ -26,7 +24,6 @@
             } @else {
               <td class="type-col"></td>
               <td class="name-col"></td>
-              <td class="detail-col"></td>
               <td class="assignee-col"></td>
               <td class="start-col"></td>
               <td class="end-col"></td>
