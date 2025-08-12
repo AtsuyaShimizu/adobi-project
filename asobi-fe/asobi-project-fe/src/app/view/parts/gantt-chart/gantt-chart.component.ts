@@ -31,7 +31,6 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   protected dateRange: Date[] = [];
   private rangeStart: Date;
   private rangeEnd: Date;
-  private isSyncing = false;
 
   constructor(private cdr: ChangeDetectorRef) {
     const start = new Date(this.today);
@@ -97,12 +96,9 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     const taskEl = this.taskArea.nativeElement;
 
     chartEl.addEventListener('scroll', () => {
-      if (this.isSyncing) {
-        this.isSyncing = false;
-        return;
+      if (taskEl.scrollTop !== chartEl.scrollTop) {
+        taskEl.scrollTop = chartEl.scrollTop;
       }
-      this.isSyncing = true;
-      taskEl.scrollTop = chartEl.scrollTop;
 
       if (chartEl.scrollLeft + chartEl.clientWidth >= chartEl.scrollWidth - 100) {
         this.extendRight(365);
@@ -114,12 +110,9 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     });
 
     taskEl.addEventListener('scroll', () => {
-      if (this.isSyncing) {
-        this.isSyncing = false;
-        return;
+      if (chartEl.scrollTop !== taskEl.scrollTop) {
+        chartEl.scrollTop = taskEl.scrollTop;
       }
-      this.isSyncing = true;
-      chartEl.scrollTop = taskEl.scrollTop;
     });
   }
 
