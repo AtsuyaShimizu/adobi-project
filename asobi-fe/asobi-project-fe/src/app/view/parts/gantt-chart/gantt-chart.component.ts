@@ -22,6 +22,7 @@ import { Task } from '../../../domain/model/task';
 export class GanttChartComponent implements AfterViewInit, OnChanges {
   @Input({ required: true }) tasks: Task[] = [];
   @ViewChild('chartArea') private chartArea?: ElementRef<HTMLDivElement>;
+  @ViewChild('ganttContainer') private ganttContainer?: ElementRef<HTMLDivElement>;
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
   private rangeStart: Date;
@@ -92,10 +93,15 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   }
 
   private setupScrollHandling(): void {
-    if (!this.chartArea) {
+    if (!this.chartArea || !this.ganttContainer) {
       return;
     }
     const chartEl = this.chartArea.nativeElement;
+    const containerEl = this.ganttContainer.nativeElement;
+
+    chartEl.addEventListener('wheel', (event) => {
+      containerEl.scrollTop += event.deltaY;
+    });
 
     chartEl.addEventListener('scroll', () => {
       if (
