@@ -7,6 +7,7 @@ interface ApiTask {
   id: number;
   title: string;
   phase: string;
+  assignee: string;
   startDate: string;
   endDate: string;
 }
@@ -23,7 +24,7 @@ export class ScheduleApi {
       type: t.phase,
       name: t.title,
       detail: '',
-      assignee: '',
+      assignee: t.assignee,
       start: new Date(t.startDate),
       end: new Date(t.endDate),
       progress: 0
@@ -35,6 +36,7 @@ export class ScheduleApi {
       id: Number(task.id),
       title: task.name,
       phase: task.type,
+      assignee: task.assignee,
       startDate: task.start.toISOString().split('T')[0],
       endDate: task.end.toISOString().split('T')[0]
     };
@@ -46,6 +48,7 @@ export class ScheduleApi {
       id: Number(task.id),
       title: task.name,
       phase: task.type,
+      assignee: task.assignee,
       startDate: task.start.toISOString().split('T')[0],
       endDate: task.end.toISOString().split('T')[0]
     };
