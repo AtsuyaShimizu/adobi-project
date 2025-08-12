@@ -55,10 +55,12 @@
 }
 
 /* ---------------- ヘッダー固定（2行） ---------------- */
+/* ---------------- ヘッダー ---------------- */
 .gantt-table thead .h {
   position: sticky;
-  background: linear-gradient(135deg, #93c5fd, #3b82f6);
-  color: #fff;
+  background: #f3f4f6;
+  color: #374151;
+  font-weight: 600;
   padding: 0 6px;
   z-index: 10; /* 基本層 */
 }
@@ -69,6 +71,7 @@
   height: var(--head1);
   line-height: var(--head1);
   z-index: 12;          /* 2行目より前面 */
+  border-bottom: 1px solid #d1d5db;
 }
 
 /* 2行目（日付） */
@@ -79,13 +82,18 @@
   z-index: 11;
 }
 
+/* ヘッダー下端の太線 */
+.gantt-table thead tr:last-child .h {
+  border-bottom: 3px double #9ca3af;
+}
+
 /* 月ヘッダーは z-index 11（指示どおり） */
 .gantt-table thead .head-1 .h.month { z-index: 11; }
 
 /* 左6列のヘッダー（rowspan=2）は最前面＆ヘッダー色を維持 */
 thead .sticky-left.h {
   z-index: 100 !important;         /* ボディより上に確実に */
-  background: linear-gradient(135deg, #93c5fd, #3b82f6) !important;  /* ヘッダー色を優先 */
+  background: #f3f4f6 !important;  /* ヘッダー色を優先 */
 }
 
 /* 左固定列（ヘッダー/ボディ共通） */
@@ -94,6 +102,11 @@ thead .sticky-left.h {
   background: var(--color-surface);   /* ボディ側は白（ヘッダーは上で上書き） */
   z-index: 20;        /* ボディ左列の基準層 */
   border-right: 1px solid #e5e7eb;
+}
+
+/* タスク情報列と日付部分の境界線 */
+.gantt-table .col-progress {
+  border-right: 3px double #9ca3af !important;
 }
 
 /* 列幅と固定位置 */
