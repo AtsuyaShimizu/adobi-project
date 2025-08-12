@@ -1,80 +1,83 @@
 <div class="gantt-container">
-  <div class="task-area" #taskArea>
-    <table class="task-table">
-      <thead>
-        <tr>
-          <th class="type-col">タスク分類</th>
-          <th class="name-col">タスク名</th>
-          <th class="assignee-col">担当者</th>
-          <th class="start-col">開始日</th>
-          <th class="end-col">終了日</th>
-          <th class="progress-col">進捗率</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of emptyRows; track $index; let i = $index) {
+  <div class="body-area">
+    <div class="task-area">
+      <table class="task-table">
+        <thead>
           <tr>
-            @if (tasks[i]; as task) {
-              <td class="type-col">{{ task.type }}</td>
-              <td class="name-col">{{ task.name }}</td>
-              <td class="assignee-col">{{ task.assignee }}</td>
-              <td class="start-col">{{ task.start | date:'yyyy-MM-dd' }}</td>
-              <td class="end-col">{{ task.end | date:'yyyy-MM-dd' }}</td>
-              <td class="progress-col">{{ task.progress }}%</td>
-            } @else {
-              <td class="type-col"></td>
-              <td class="name-col"></td>
-              <td class="assignee-col"></td>
-              <td class="start-col"></td>
-              <td class="end-col"></td>
-              <td class="progress-col"></td>
+            <th class="type-col">タスク分類</th>
+            <th class="name-col">タスク名</th>
+            <th class="assignee-col">担当者</th>
+            <th class="start-col">開始日</th>
+            <th class="end-col">終了日</th>
+            <th class="progress-col">進捗率</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of emptyRows; track $index; let i = $index) {
+            <tr>
+              @if (tasks[i]; as task) {
+                <td class="type-col">{{ task.type }}</td>
+                <td class="name-col">{{ task.name }}</td>
+                <td class="assignee-col">{{ task.assignee }}</td>
+                <td class="start-col">{{ task.start | date: "yyyy-MM-dd" }}</td>
+                <td class="end-col">{{ task.end | date: "yyyy-MM-dd" }}</td>
+                <td class="progress-col">{{ task.progress }}%</td>
+              } @else {
+                <td class="type-col"></td>
+                <td class="name-col"></td>
+                <td class="assignee-col"></td>
+                <td class="start-col"></td>
+                <td class="end-col"></td>
+                <td class="progress-col"></td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="chart-area" #chartArea>
+      <table class="chart-table">
+        <thead>
+          <tr>
+            @for (month of months; track month.label) {
+              <th [attr.colspan]="month.days">{{ month.label }}</th>
             }
           </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-  <div class="chart-area" #chartArea>
-    <table class="chart-table">
-      <thead>
-        <tr>
-          @for (month of months; track month.label) {
-            <th [attr.colspan]="month.days">{{ month.label }}</th>
-          }
-        </tr>
-        <tr>
-          @for (date of dateRange; track $index; let i = $index) {
-            <th
-              class="date-col"
-              [class.month-boundary]="isMonthStart(date) && i !== 0"
-              >{{ date | date:'dd' }}</th
-            >
-          }
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of emptyRows; track $index; let i = $index) {
           <tr>
-            @if (tasks[i]; as task) {
-              @for (date of dateRange; track $index; let j = $index) {
-                <td
-                  class="day"
-                  [class.progress]="isProgress(task, date)"
-                  [class.planned]="isPlanned(task, date)"
-                  [class.month-boundary]="isMonthStart(date) && j !== 0"
-                ></td>
-              }
-            } @else {
-              @for (date of dateRange; track $index; let j = $index) {
-                <td
-                  class="day"
-                  [class.month-boundary]="isMonthStart(date) && j !== 0"
-                ></td>
-              }
+            @for (date of dateRange; track $index; let i = $index) {
+              <th
+                class="date-col"
+                [class.month-boundary]="isMonthStart(date) && i !== 0"
+              >
+                {{ date | date: "dd" }}
+              </th>
             }
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (row of emptyRows; track $index; let i = $index) {
+            <tr>
+              @if (tasks[i]; as task) {
+                @for (date of dateRange; track $index; let j = $index) {
+                  <td
+                    class="day"
+                    [class.progress]="isProgress(task, date)"
+                    [class.planned]="isPlanned(task, date)"
+                    [class.month-boundary]="isMonthStart(date) && j !== 0"
+                  ></td>
+                }
+              } @else {
+                @for (date of dateRange; track $index; let j = $index) {
+                  <td
+                    class="day"
+                    [class.month-boundary]="isMonthStart(date) && j !== 0"
+                  ></td>
+                }
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
