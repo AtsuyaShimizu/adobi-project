@@ -36,6 +36,16 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   private dragData?: { memo: Memo; el: HTMLElement; offsetX: number; offsetY: number };
   private onMove = (e: MouseEvent) => this.handleDrag(e);
   private onUp = () => this.endDrag();
+  private resizeData?: {
+    memo: Memo;
+    el: HTMLElement;
+    startX: number;
+    startY: number;
+    startWidth: number;
+    startHeight: number;
+  };
+  private onResizeMove = (e: MouseEvent) => this.handleResize(e);
+  private onResizeUp = () => this.endResize();
   private focusedCell?: { x: number; y: number };
   protected editingMemoId: string | null = null;
 
@@ -206,6 +216,24 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     event.preventDefault();
   }
 
+  onMemoResizeMouseDown(event: MouseEvent, memo: Memo): void {
+    event.stopPropagation();
+    event.preventDefault();
+    const handle = event.currentTarget as HTMLElement | null;
+    const el = handle?.parentElement as HTMLElement | null;
+    if (!el) return;
+    this.resizeData = {
+      memo,
+      el,
+      startX: event.clientX,
+      startY: event.clientY,
+      startWidth: el.offsetWidth,
+      startHeight: el.offsetHeight,
+    };
+    document.addEventListener('mousemove', this.onResizeMove);
+    document.addEventListener('mouseup', this.onResizeUp);
+  }
+
   onMemoBlur(event: FocusEvent, memo: Memo): void {
     const el = event.target as HTMLElement | null;
     if (!el) return;
@@ -259,6 +287,18 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     this.cdr.markForCheck();
   }
 
+  private handleResize(event: MouseEvent): void {
+    if (!this.resizeData) return;
+    const { el, memo, startX, startY, startWidth, startHeight } = this.resizeData;
+    const width = startWidth + (event.clientX - startX);
+    const height = startHeight + (event.clientY - startY);
+    el.style.width = `${width}px`;
+    el.style.height = `${height}px`;
+    memo.width = el.offsetWidth;
+    memo.height = el.offsetHeight;
+    this.cdr.markForCheck();
+  }
+
   private endDrag(): void {
     if (!this.dragData) return;
     const { memo, el } = this.dragData;
@@ -269,6 +309,18 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     this.dragData = undefined;
     document.removeEventListener('mousemove', this.onMove);
     document.removeEventListener('mouseup', this.onUp);
+  }
+
+  private endResize(): void {
+    if (!this.resizeData) return;
+    const { memo, el } = this.resizeData;
+    memo.width = el.offsetWidth;
+    memo.height = el.offsetHeight;
+    memo.text = this.getMemoBodyText(el);
+    this.memoChange.emit({ ...memo });
+    this.resizeData = undefined;
+    document.removeEventListener('mousemove', this.onResizeMove);
+    document.removeEventListener('mouseup', this.onResizeUp);
   }
 
   private getMemoBodyText(el: HTMLElement): string {

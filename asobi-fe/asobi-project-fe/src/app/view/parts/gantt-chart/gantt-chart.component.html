@@ -102,6 +102,10 @@
                 (blur)="onMemoBlur($event, memo)"
               >{{ memo.text }}</div>
             </div>
+            <div
+              class="resize-handle"
+              (mousedown)="onMemoResizeMouseDown($event, memo)"
+            ></div>
           </div>
         }
       </div>
