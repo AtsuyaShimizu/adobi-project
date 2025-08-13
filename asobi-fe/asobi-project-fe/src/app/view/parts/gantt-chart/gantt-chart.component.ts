@@ -28,11 +28,6 @@ import {
 import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
 import { MemoComponent } from '../memo/memo.component';
-import {
-  ScrollAnchor,
-  captureAnchor,
-  restoreFromAnchor,
-} from './gantt-scroll-anchor.util';
 
 interface TaskView {
   task: Task;
@@ -355,9 +350,8 @@ export class GanttChartComponent
       )
         this.needsPrune = true;
     }
-  }
 
-  onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
+    onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
     const host = this.scrollHost?.nativeElement;
     const cell = event.currentTarget as HTMLElement | null;
     if (!host || !cell) return;
