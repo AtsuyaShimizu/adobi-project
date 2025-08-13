@@ -20,6 +20,7 @@
       [tasks]="tasks"
       [memos]="memos"
       (memoChange)="memoChange.emit($event)"
+      (taskClick)="openTaskDetail.emit($event)"
     ></app-gantt-chart>
     @if (calendarVisible) {
       <app-calendar-modal
@@ -38,6 +39,7 @@
         <div class="dialog" (click)="$event.stopPropagation()">
           <h2>タスク追加</h2>
           <app-task-form
+            [initialTask]="editingTask"
             (save)="create.emit($event); closeForm.emit()"
           ></app-task-form>
           <div class="actions">
@@ -45,6 +47,14 @@
           </div>
         </div>
       </div>
+    }
+    @if (taskDetailVisible && selectedTask) {
+      <app-task-detail-modal
+        [task]="selectedTask"
+        (close)="closeTaskDetail.emit()"
+        (edit)="editTask.emit($event)"
+        (delete)="deleteTask.emit($event)"
+      ></app-task-detail-modal>
     }
   </div>
   <app-footer [dateTime]="dateTime"></app-footer>

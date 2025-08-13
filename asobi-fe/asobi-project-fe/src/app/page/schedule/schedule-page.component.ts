@@ -22,6 +22,9 @@ export class SchedulePageComponent implements OnInit {
   protected isFormVisible = signal(false);
   protected isCalendarVisible = signal(false);
   protected isMemoVisible = signal(false);
+  protected isTaskDetailVisible = signal(false);
+  protected selectedTask = signal<Task | null>(null);
+  protected editingTask = signal<Task | null>(null);
   protected dateTime = this.#clockService.now;
 
   ngOnInit(): void {
@@ -30,6 +33,7 @@ export class SchedulePageComponent implements OnInit {
   }
 
   openForm(): void {
+    this.editingTask.set(null);
     this.isFormVisible.set(true);
   }
 
@@ -53,9 +57,14 @@ export class SchedulePageComponent implements OnInit {
     this.isMemoVisible.set(false);
   }
 
-  onCreate(task: Task): void {
-    this.#scheduleService.add(task);
+  onSave(task: Task): void {
+    if (this.editingTask()) {
+      this.#scheduleService.update(task);
+    } else {
+      this.#scheduleService.add(task);
+    }
     this.closeForm();
+    this.editingTask.set(null);
   }
 
   onMemoCreate(event: { text: string; x: number; y: number }): void {
@@ -73,5 +82,26 @@ export class SchedulePageComponent implements OnInit {
 
   onMemoChange(memo: Memo): void {
     this.#memoService.update(memo);
+  }
+
+  openTaskDetail(task: Task): void {
+    this.selectedTask.set(task);
+    this.isTaskDetailVisible.set(true);
+  }
+
+  closeTaskDetail(): void {
+    this.isTaskDetailVisible.set(false);
+    this.selectedTask.set(null);
+  }
+
+  onEdit(task: Task): void {
+    this.editingTask.set(task);
+    this.isFormVisible.set(true);
+    this.closeTaskDetail();
+  }
+
+  onDelete(id: string): void {
+    this.#scheduleService.remove(id);
+    this.closeTaskDetail();
   }
 }
