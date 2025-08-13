@@ -93,6 +93,7 @@ export class GanttChartComponent
   private focusedCellIdx?: { row: number; col: number };
   protected hoveredColIdx: number | null = null;
   protected editingMemoId: string | null = null;
+  private isScrollUpdateScheduled = false;
   protected readonly monthColors = [
     '#e6f4ea', // Jan: light green
     '#e6f7ff', // Feb: light blue
@@ -271,7 +272,11 @@ export class GanttChartComponent
         `.head-2 th[data-idx="${idx}"]`,
       );
       const stickyWidth = this.getStickyWidth();
-      if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
+      if (th)
+        host.scrollTo({
+          left: Math.max(th.offsetLeft - stickyWidth, 0),
+          behavior: 'smooth',
+        });
       this.updateScrollbarThumb();
     });
   }
@@ -301,7 +306,7 @@ export class GanttChartComponent
     } else if (firstVisibleIdx < GanttChartComponent.EXTEND_THRESHOLD_DAYS) {
       this.extendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
     }
-  };
+  }
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
     const host = this.scrollHost?.nativeElement;
