@@ -109,6 +109,7 @@ th.col-type,
 th.col-name,
 th.col-assignee {
   position: relative;
+  overflow: visible;
 }
 
 .sort-icon {
@@ -126,7 +127,7 @@ th.col-assignee {
   border: 1px solid #d1d5db;
   border-radius: 4px;
   padding: 8px;
-  z-index: 10;
+  z-index: 200;
   max-height: 200px;
   overflow: auto;
   text-align: left;
