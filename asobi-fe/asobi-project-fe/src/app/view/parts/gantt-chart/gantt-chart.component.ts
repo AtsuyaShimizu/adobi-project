@@ -95,18 +95,18 @@ export class GanttChartComponent
   protected editingMemoId: string | null = null;
   private isScrollUpdateScheduled = false;
   protected readonly monthColors = [
-    '#e6f4ea', // Jan: light green
-    '#e6f7ff', // Feb: light blue
-    '#f2e6ff', // Mar: light purple
-    '#ffe6f2', // Apr: light pink
-    '#fffbe6', // May: light yellow
-    '#e6fff7', // Jun: light mint
-    '#e6f0ff', // Jul: light azure
-    '#f9e6ff', // Aug: soft violet
-    '#ffe6e6', // Sep: light peach
-    '#e6fff2', // Oct: pale green
-    '#f4ffe6', // Nov: pale lime
-    '#e6f9ff', // Dec: icy blue
+    '#e0f4ff', // Jan: icy blue
+    '#e0eaff', // Feb: pale sky
+    '#ffe6f0', // Mar: blossom pink
+    '#fff0f6', // Apr: cherry pink
+    '#e6ffe6', // May: fresh green
+    '#fff5e6', // Jun: early summer cream
+    '#ffeccc', // Jul: soft orange
+    '#fffde6', // Aug: mellow yellow
+    '#ffe6cc', // Sep: light ochre
+    '#f9f2e6', // Oct: gentle beige
+    '#f6ffe6', // Nov: pale leaf
+    '#e0f2ff', // Dec: winter blue
   ];
 
   constructor(private cdr: ChangeDetectorRef) {
