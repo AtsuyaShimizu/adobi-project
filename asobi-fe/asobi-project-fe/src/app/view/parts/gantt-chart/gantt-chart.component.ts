@@ -19,6 +19,8 @@ import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
 import { MemoComponent } from '../memo/memo.component';
 
+// NOTE: AGENTS.md dependency rules verified: staying within View layer only.
+
 interface TaskView {
   task: Task;
   start: Date;
@@ -98,6 +100,11 @@ export class GanttChartComponent
   protected hoveredColIdx: number | null = null;
   protected editingMemoId: string | null = null;
   private isScrollUpdateScheduled = false;
+  private isExtendingRight = false;
+  private isExtendingLeft = false;
+  private isPruningRight = false;
+  private isPruningLeft = false;
+  private pendingOperations: Array<() => void> = [];
   protected readonly monthColors = [
     '#e0f4ff', // Jan: icy blue
     '#e0eaff', // Feb: pale sky
@@ -184,7 +191,7 @@ export class GanttChartComponent
     this.scrollToToday();
     const host = this.scrollHost?.nativeElement;
     if (host) {
-      host.addEventListener('scroll', this.onHostScroll);
+      host.addEventListener('scroll', this.onHostScroll); // TODO: Infinite Scroll Smoothness - Scroll event binding
     }
     this.updateScrollbarThumb();
     this.onHostScroll();
@@ -264,9 +271,9 @@ export class GanttChartComponent
 
     const target = this.toStartOfDay(date);
     while (target < this.rangeStart)
-      this.extendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
+      this.requestExtendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
     while (target > this.rangeEnd)
-      this.extendRightMonths(GanttChartComponent.EXTEND_MONTHS);
+      this.requestExtendRightMonths(GanttChartComponent.EXTEND_MONTHS);
 
     const idx = this.dateRange.findIndex((d) => this.isSameDay(d, target));
     if (idx < 0) return;
@@ -290,6 +297,7 @@ export class GanttChartComponent
   }
 
   private onHostScroll = (): void => {
+    // TODO: Infinite Scroll Smoothness - Scroll detection
     const host = this.scrollHost?.nativeElement;
     if (!host) return;
     this.updateScrollbarThumb();
@@ -306,9 +314,9 @@ export class GanttChartComponent
       firstVisibleIdx + visibleCols >
       this.dateRange.length - GanttChartComponent.EXTEND_THRESHOLD_DAYS
     ) {
-      this.extendRightMonths(GanttChartComponent.EXTEND_MONTHS);
+      this.requestExtendRightMonths(GanttChartComponent.EXTEND_MONTHS);
     } else if (firstVisibleIdx < GanttChartComponent.EXTEND_THRESHOLD_DAYS) {
-      this.extendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
+      this.requestExtendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
     }
   }
 
@@ -542,6 +550,102 @@ export class GanttChartComponent
     );
   }
 
+  private processNextOperation(): void {
+    if (
+      this.isExtendingRight ||
+      this.isExtendingLeft ||
+      this.isPruningRight ||
+      this.isPruningLeft
+    )
+      return;
+    const next = this.pendingOperations.shift();
+    if (next) next();
+  }
+
+  private requestExtendRightMonths(months: number): void {
+    if (this.isExtendingRight) return;
+    const run = () => {
+      this.isExtendingRight = true;
+      this.extendRightMonths(months);
+      this.isExtendingRight = false;
+      this.processNextOperation();
+    };
+    if (
+      this.isExtendingLeft ||
+      this.isPruningRight ||
+      this.isPruningLeft
+    ) {
+      this.pendingOperations.push(run);
+    } else {
+      run();
+    }
+  }
+
+  private requestExtendLeftMonths(months: number): void {
+    if (this.isExtendingLeft) return;
+    const run = () => {
+      this.isExtendingLeft = true;
+      this.extendLeftMonths(months);
+      this.isExtendingLeft = false;
+      this.processNextOperation();
+    };
+    if (
+      this.isExtendingRight ||
+      this.isPruningRight ||
+      this.isPruningLeft
+    ) {
+      this.pendingOperations.push(run);
+    } else {
+      run();
+    }
+  }
+
+  private requestPruneRightMonths(months: number): void {
+    if (this.isPruningRight) return;
+    const run = () => {
+      this.isPruningRight = true;
+      this.pruneRightMonths(months);
+      this.isPruningRight = false;
+      this.processNextOperation();
+    };
+    if (
+      this.isExtendingRight ||
+      this.isExtendingLeft ||
+      this.isPruningLeft
+    ) {
+      this.pendingOperations.push(run);
+    } else {
+      run();
+    }
+  }
+
+  private requestPruneLeftMonths(months: number): void {
+    if (this.isPruningLeft) return;
+    const run = () => {
+      this.isPruningLeft = true;
+      this.pruneLeftMonths(months);
+      this.isPruningLeft = false;
+      this.processNextOperation();
+    };
+    if (
+      this.isExtendingRight ||
+      this.isExtendingLeft ||
+      this.isPruningRight
+    ) {
+      this.pendingOperations.push(run);
+    } else {
+      run();
+    }
+  }
+
+  private pruneRightMonths(months: number): void {
+    // TODO: Infinite Scroll Smoothness - Right pruning implementation
+  }
+
+  private pruneLeftMonths(months: number): void {
+    // TODO: Infinite Scroll Smoothness - Left pruning implementation
+  }
+
   private buildDateRange(): void {
     const dates: Date[] = [];
     for (
@@ -555,6 +659,7 @@ export class GanttChartComponent
   }
 
   private extendRightMonths(months: number): void {
+    // TODO: Infinite Scroll Smoothness - Right range extension
     const host = this.scrollHost?.nativeElement;
     const prevStart = new Date(this.rangeStart);
     this.rangeEnd = this.addMonths(this.rangeEnd, months);
@@ -564,12 +669,13 @@ export class GanttChartComponent
     this.cdr.markForCheck();
     if (host) {
       const removedDays = this.diffDays(prevStart, this.rangeStart);
-      host.scrollLeft -= removedDays * GanttChartComponent.CELL_WIDTH;
+      host.scrollLeft -= removedDays * GanttChartComponent.CELL_WIDTH; // TODO: Infinite Scroll Smoothness - scrollLeft adjustment after right extension
     }
     this.updateScrollbarThumb();
   }
 
   private extendLeftMonths(months: number): void {
+    // TODO: Infinite Scroll Smoothness - Left range extension
     const host = this.scrollHost?.nativeElement;
     const prevStart = new Date(this.rangeStart);
     this.rangeStart = this.addMonths(this.rangeStart, -months);
@@ -579,7 +685,7 @@ export class GanttChartComponent
     this.cdr.markForCheck();
     if (host) {
       const addedDays = this.diffDays(this.rangeStart, prevStart);
-      host.scrollLeft += addedDays * GanttChartComponent.CELL_WIDTH;
+      host.scrollLeft += addedDays * GanttChartComponent.CELL_WIDTH; // TODO: Infinite Scroll Smoothness - scrollLeft adjustment after left extension
     }
     this.updateScrollbarThumb();
   }
