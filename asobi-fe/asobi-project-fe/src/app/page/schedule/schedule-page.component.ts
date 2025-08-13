@@ -23,6 +23,8 @@ export class SchedulePageComponent implements OnInit {
   protected isCalendarVisible = signal(false);
   protected isMemoVisible = signal(false);
   protected dateTime = this.#clockService.now;
+  protected selectedTask = signal<Task | null>(null);
+  protected editingTask = signal<Task | null>(null);
 
   ngOnInit(): void {
     this.#scheduleService.load();
@@ -30,11 +32,13 @@ export class SchedulePageComponent implements OnInit {
   }
 
   openForm(): void {
+    this.editingTask.set(null);
     this.isFormVisible.set(true);
   }
 
   closeForm(): void {
     this.isFormVisible.set(false);
+    this.editingTask.set(null);
   }
 
   openCalendar(): void {
@@ -53,9 +57,33 @@ export class SchedulePageComponent implements OnInit {
     this.isMemoVisible.set(false);
   }
 
-  onCreate(task: Task): void {
-    this.#scheduleService.add(task);
+  onSave(task: Task): void {
+    if (this.editingTask()) {
+      this.#scheduleService.update(task);
+    } else {
+      this.#scheduleService.add(task);
+    }
     this.closeForm();
+    this.editingTask.set(null);
+  }
+
+  onTaskSelect(task: Task): void {
+    this.selectedTask.set(task);
+  }
+
+  closeTaskModal(): void {
+    this.selectedTask.set(null);
+  }
+
+  onEditTask(task: Task): void {
+    this.selectedTask.set(null);
+    this.editingTask.set(task);
+    this.isFormVisible.set(true);
+  }
+
+  onDeleteTask(id: string): void {
+    this.#scheduleService.remove(id);
+    this.closeTaskModal();
   }
 
   onMemoCreate(event: { text: string; x: number; y: number }): void {

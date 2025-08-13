@@ -20,6 +20,7 @@
       [tasks]="tasks"
       [memos]="memos"
       (memoChange)="memoChange.emit($event)"
+      (taskSelect)="taskSelect.emit($event)"
     ></app-gantt-chart>
     @if (calendarVisible) {
       <app-calendar-modal
@@ -36,15 +37,24 @@
     @if (formVisible) {
       <div class="task-dialog" (click)="closeForm.emit()">
         <div class="dialog" (click)="$event.stopPropagation()">
-          <h2>タスク追加</h2>
+          <h2>{{ editingTask ? 'タスク編集' : 'タスク追加' }}</h2>
           <app-task-form
-            (save)="create.emit($event); closeForm.emit()"
+            [task]="editingTask"
+            (save)="save.emit($event); closeForm.emit()"
           ></app-task-form>
           <div class="actions">
             <button class="close" (click)="closeForm.emit()">閉じる</button>
           </div>
         </div>
       </div>
+    }
+    @if (selectedTask) {
+      <app-task-modal
+        [task]="selectedTask"
+        (edit)="taskEdit.emit($event)"
+        (delete)="taskDelete.emit($event)"
+        (close)="taskClose.emit()"
+      ></app-task-modal>
     }
   </div>
   <app-footer [dateTime]="dateTime"></app-footer>

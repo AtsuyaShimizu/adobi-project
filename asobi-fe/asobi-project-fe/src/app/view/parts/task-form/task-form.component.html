@@ -1,31 +1,31 @@
 <form (ngSubmit)="submit()" #f="ngForm">
   <div class="field">
     <label for="type">分類</label>
-    <input id="type" name="type" [(ngModel)]="task.type" />
+    <input id="type" name="type" [(ngModel)]="form.type" />
   </div>
   <div class="field">
     <label for="name">タスク名</label>
-    <input id="name" name="name" [(ngModel)]="task.name" required />
+    <input id="name" name="name" [(ngModel)]="form.name" required />
   </div>
   <div class="field">
     <label for="detail">詳細</label>
-    <textarea id="detail" name="detail" [(ngModel)]="task.detail"></textarea>
+    <textarea id="detail" name="detail" [(ngModel)]="form.detail"></textarea>
   </div>
   <div class="field">
     <label for="assignee">担当者</label>
-    <input id="assignee" name="assignee" [(ngModel)]="task.assignee" />
+    <input id="assignee" name="assignee" [(ngModel)]="form.assignee" />
   </div>
   <div class="field">
     <label for="start">開始日</label>
-    <input id="start" type="date" name="start" [(ngModel)]="task.start" />
+    <input id="start" type="date" name="start" [(ngModel)]="form.start" />
   </div>
   <div class="field">
     <label for="end">終了日</label>
-    <input id="end" type="date" name="end" [(ngModel)]="task.end" />
+    <input id="end" type="date" name="end" [(ngModel)]="form.end" />
   </div>
   <div class="field">
     <label for="progress">進捗(%)</label>
-    <input id="progress" type="number" name="progress" [(ngModel)]="task.progress" min="0" max="100" />
+    <input id="progress" type="number" name="progress" [(ngModel)]="form.progress" min="0" max="100" />
   </div>
   <div class="actions">
     <button type="submit" [disabled]="f.invalid">登録</button>

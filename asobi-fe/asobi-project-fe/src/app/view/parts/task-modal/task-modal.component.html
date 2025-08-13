@@ -1,0 +1,25 @@
+<div class="task-modal" (click)="close.emit()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <button class="close-button" (click)="close.emit()">×</button>
+    <h2>タスク情報</h2>
+    <div class="content">
+      <div class="row"><span class="label">タスク分類</span><span class="value">{{ task.type }}</span></div>
+      <div class="row"><span class="label">タスク名</span><span class="value">{{ task.name }}</span></div>
+      <div class="row"><span class="label">タスク詳細</span><span class="value">{{ task.detail }}</span></div>
+      <div class="row"><span class="label">担当者</span><span class="value">{{ task.assignee }}</span></div>
+      <div class="row"><span class="label">開始日</span><span class="value">{{ task.start | date: 'yyyy-MM-dd' }}</span></div>
+      <div class="row"><span class="label">終了日</span><span class="value">{{ task.end | date: 'yyyy-MM-dd' }}</span></div>
+      <div class="row"><span class="label">進捗</span><span class="value">{{ task.progress }}%</span></div>
+    </div>
+    <div class="actions">
+      <button class="edit" (click)="edit.emit(task)">
+        <img src="edit.svg" alt="" class="icon" />
+        <span>編集</span>
+      </button>
+      <button class="delete" (click)="delete.emit(task.id)">
+        <img src="trash.svg" alt="" class="icon" />
+        <span>削除</span>
+      </button>
+    </div>
+  </div>
+</div>

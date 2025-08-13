@@ -29,6 +29,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   @Input({ required: true }) tasks: Task[] = [];
   @Input({ required: true }) memos: Memo[] = [];
   @Output() memoChange = new EventEmitter<Memo>();
+  @Output() taskSelect = new EventEmitter<Task>();
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
 
   protected readonly emptyRows = Array.from({ length: 100 });
@@ -50,6 +51,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   };
   private onResizeMove = (e: MouseEvent) => this.handleResize(e);
   private onResizeUp = () => this.endResize();
+  private onHostScroll = () => this.handleHostScroll();
   private focusedCell?: { x: number; y: number };
   private focusedCellIdx?: { row: number; col: number };
   protected hoveredColIdx: number | null = null;
@@ -189,15 +191,19 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     const host = this.scrollHost?.nativeElement;
     if (!host) return;
 
-    host.addEventListener('scroll', () => {
-      if (host.scrollLeft + host.clientWidth >= host.scrollWidth - 100) {
-        this.extendRight(GanttChartComponent.EXTEND_DAYS);
-      } else if (host.scrollLeft <= 100) {
-        const prevWidth = host.scrollWidth;
-        this.extendLeft(GanttChartComponent.EXTEND_DAYS);
-        host.scrollLeft += host.scrollWidth - prevWidth;
-      }
-    });
+    host.addEventListener('scroll', this.onHostScroll);
+  }
+
+  private handleHostScroll(): void {
+    const host = this.scrollHost?.nativeElement;
+    if (!host) return;
+    if (host.scrollLeft + host.clientWidth >= host.scrollWidth - 100) {
+      this.extendRight(GanttChartComponent.EXTEND_DAYS);
+    } else if (host.scrollLeft <= 100) {
+      const prevWidth = host.scrollWidth;
+      this.extendLeft(GanttChartComponent.EXTEND_DAYS);
+      host.scrollLeft += host.scrollWidth - prevWidth;
+    }
   }
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {

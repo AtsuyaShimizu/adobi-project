@@ -14,6 +14,7 @@ import { HeaderComponent } from '../../parts/header/header.component';
 import { FooterComponent } from '../../parts/footer/footer.component';
 import { CalendarModalComponent } from '../../parts/calendar-modal/calendar-modal.component';
 import { MemoModalComponent } from '../../parts/memo-modal/memo-modal.component';
+import { TaskModalComponent } from '../../parts/task-modal/task-modal.component';
 
 @Component({
   selector: 'app-schedule-layout',
@@ -25,6 +26,7 @@ import { MemoModalComponent } from '../../parts/memo-modal/memo-modal.component'
     FooterComponent,
     CalendarModalComponent,
     MemoModalComponent,
+    TaskModalComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './schedule-layout.component.html',
@@ -39,7 +41,9 @@ export class ScheduleLayoutComponent {
   @Input() memoVisible = false;
   @Input() dateTime = '';
   @Input() calendarVisible = false;
-  @Output() create = new EventEmitter<Task>();
+  @Input() selectedTask: Task | null = null;
+  @Input() editingTask: Task | null = null;
+  @Output() save = new EventEmitter<Task>();
   @Output() openForm = new EventEmitter<void>();
   @Output() closeForm = new EventEmitter<void>();
   @Output() openMemo = new EventEmitter<void>();
@@ -48,6 +52,10 @@ export class ScheduleLayoutComponent {
   @Output() memoChange = new EventEmitter<Memo>();
   @Output() openCalendar = new EventEmitter<void>();
   @Output() closeCalendar = new EventEmitter<void>();
+  @Output() taskSelect = new EventEmitter<Task>();
+  @Output() taskEdit = new EventEmitter<Task>();
+  @Output() taskDelete = new EventEmitter<string>();
+  @Output() taskClose = new EventEmitter<void>();
 
   onCalendarConfirm(date: Date): void {
     this.ganttChart?.scrollToDate(date);

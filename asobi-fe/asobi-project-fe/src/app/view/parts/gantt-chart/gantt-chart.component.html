@@ -38,12 +38,12 @@
         @for (row of emptyRows; track $index; let i = $index) {
           <tr>
             @if (tasks[i]; as task) {
-              <td class="sticky-left col-type">{{ task.type }}</td>
-              <td class="sticky-left col-name">{{ task.name }}</td>
-              <td class="sticky-left col-assignee">{{ task.assignee }}</td>
-              <td class="sticky-left col-start">{{ task.start | date : 'yyyy-MM-dd' }}</td>
-              <td class="sticky-left col-end">{{ task.end | date : 'yyyy-MM-dd' }}</td>
-              <td class="sticky-left col-progress">{{ task.progress }}%</td>
+              <td class="sticky-left col-type" (click)="taskSelect.emit(task)">{{ task.type }}</td>
+              <td class="sticky-left col-name" (click)="taskSelect.emit(task)">{{ task.name }}</td>
+              <td class="sticky-left col-assignee" (click)="taskSelect.emit(task)">{{ task.assignee }}</td>
+              <td class="sticky-left col-start" (click)="taskSelect.emit(task)">{{ task.start | date : 'yyyy-MM-dd' }}</td>
+              <td class="sticky-left col-end" (click)="taskSelect.emit(task)">{{ task.end | date : 'yyyy-MM-dd' }}</td>
+              <td class="sticky-left col-progress" (click)="taskSelect.emit(task)">{{ task.progress }}%</td>
 
               @for (date of dateRange; track date; let j = $index) {
                 <td
