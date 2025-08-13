@@ -6,6 +6,7 @@ import { Task } from '../../domain/model/task';
 interface ApiTask {
   id: number;
   title: string;
+  detail: string;
   phase: string;
   assignee: string;
   startDate: string;
@@ -23,7 +24,7 @@ export class ScheduleApi {
       id: String(t.id),
       type: t.phase,
       name: t.title,
-      detail: '',
+      detail: t.detail,
       assignee: t.assignee,
       start: new Date(t.startDate),
       end: new Date(t.endDate),
@@ -35,6 +36,7 @@ export class ScheduleApi {
     const body: ApiTask = {
       id: Number(task.id),
       title: task.name,
+      detail: task.detail,
       phase: task.type,
       assignee: task.assignee,
       startDate: task.start.toISOString().split('T')[0],
@@ -47,6 +49,7 @@ export class ScheduleApi {
     const body: ApiTask = {
       id: Number(task.id),
       title: task.name,
+      detail: task.detail,
       phase: task.type,
       assignee: task.assignee,
       startDate: task.start.toISOString().split('T')[0],
