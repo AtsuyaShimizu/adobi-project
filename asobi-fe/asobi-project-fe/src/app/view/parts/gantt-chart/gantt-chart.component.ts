@@ -29,6 +29,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
   @Input({ required: true }) tasks: Task[] = [];
   @Input({ required: true }) memos: Memo[] = [];
   @Output() memoChange = new EventEmitter<Memo>();
+  @Output() taskClick = new EventEmitter<Task>();
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
   @ViewChild('headerHost') private headerHost?: ElementRef<HTMLDivElement>;
 
@@ -356,6 +357,10 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
 
   private getMemoBodyText(el: HTMLElement): string {
     return el.querySelector<HTMLElement>('.memo-body')?.innerText ?? '';
+  }
+
+  onRowClick(task: Task): void {
+    this.taskClick.emit(task);
   }
 
   private getStickyWidth(): number {

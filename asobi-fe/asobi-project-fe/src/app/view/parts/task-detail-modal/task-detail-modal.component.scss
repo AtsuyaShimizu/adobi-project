@@ -1,0 +1,75 @@
+.task-detail-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.task-detail-modal .dialog {
+  position: relative;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.task-detail-modal .close-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #f44336;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.task-detail-modal .content p {
+  margin: 0.5rem 0;
+}
+
+.task-detail-modal .label {
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.task-detail-modal .actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.task-detail-modal .actions button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.task-detail-modal .actions .edit-btn {
+  background: #1976d2;
+  color: #fff;
+}
+
+.task-detail-modal .actions .delete-btn {
+  background: #e53935;
+  color: #fff;
+}
+
+.task-detail-modal .actions .icon {
+  width: 16px;
+  height: 16px;
+}

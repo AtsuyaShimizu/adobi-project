@@ -4,6 +4,9 @@
   [formVisible]="isFormVisible()"
   [memoVisible]="isMemoVisible()"
   [calendarVisible]="isCalendarVisible()"
+  [taskDetailVisible]="isTaskDetailVisible()"
+  [selectedTask]="selectedTask()"
+  [editingTask]="editingTask()"
   [dateTime]="dateTime()"
   (openForm)="openForm()"
   (closeForm)="closeForm()"
@@ -13,4 +16,8 @@
   (memoChange)="onMemoChange($event)"
   (openCalendar)="openCalendar()"
   (closeCalendar)="closeCalendar()"
-  (create)="onCreate($event)"></app-schedule-layout>
+  (create)="onSave($event)"
+  (openTaskDetail)="openTaskDetail($event)"
+  (closeTaskDetail)="closeTaskDetail()"
+  (editTask)="onEdit($event)"
+  (deleteTask)="onDelete($event)"></app-schedule-layout>

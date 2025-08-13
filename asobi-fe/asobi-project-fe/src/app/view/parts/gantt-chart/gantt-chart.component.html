@@ -40,8 +40,8 @@
     <table class="gantt-table">
       <tbody>
         @for (row of emptyRows; track $index; let i = $index) {
-          <tr>
-            @if (tasks[i]; as task) {
+          @if (tasks[i]; as task) {
+            <tr (click)="onRowClick(task)">
               <td class="sticky-left col-type">{{ task.type }}</td>
               <td class="sticky-left col-name">{{ task.name }}</td>
               <td class="sticky-left col-assignee">{{ task.assignee }}</td>
@@ -66,7 +66,9 @@
                   [class.month-boundary]="isMonthStart(date) && j !== 0"
                 ></td>
               }
-            } @else {
+            </tr>
+          } @else {
+            <tr>
               <td class="sticky-left col-type"></td>
               <td class="sticky-left col-name"></td>
               <td class="sticky-left col-assignee"></td>
@@ -85,8 +87,8 @@
                   [class.month-boundary]="isMonthStart(date) && j !== 0"
                 ></td>
               }
-            }
-          </tr>
+            </tr>
+          }
         }
       </tbody>
     </table>
