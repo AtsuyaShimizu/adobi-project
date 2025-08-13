@@ -21,10 +21,14 @@
   --left-start: calc(var(--left-assignee) + var(--w-assignee));
   --left-end: calc(var(--left-start) + var(--w-start));
   --left-progress: calc(var(--left-end) + var(--w-end));
+  --head-total: calc(var(--head1) + var(--head2));
+  --left-cols-width: calc(var(--left-progress) + var(--w-progress));
 }
 
 .gantt-container {
   height: 100%;
+  display: flex;
+  flex-direction: column;
   border-radius: 8px;
   background: var(--color-surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -34,10 +38,32 @@
 /* sticky の基準を1つに限定 */
 .scroll-host {
   width: 100%;
-  height: 100%;
-  overflow: auto; /* 縦横ここで */
+  height: calc(100% - var(--head-total));
+  overflow: auto; /* データ部分のみ */
   position: relative;
   scrollbar-gutter: stable;
+}
+
+.header-wrapper {
+  height: var(--head-total);
+  overflow-x: scroll;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  flex: none;
+}
+.header-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.h-scrollbar-mask {
+  position: sticky;
+  left: 0;
+  bottom: 0;
+  width: var(--left-cols-width);
+  height: 20px;
+  background: var(--color-surface);
+  pointer-events: none;
+  z-index: 30;
 }
 
 /* sticky と相性が良い separate を採用（Safari 安定） */
