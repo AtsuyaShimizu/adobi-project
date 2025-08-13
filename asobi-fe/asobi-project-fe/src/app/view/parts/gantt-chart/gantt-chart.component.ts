@@ -56,7 +56,7 @@ export class GanttChartComponent
   private static readonly EXTEND_MONTHS = 2;
   private static readonly EXTEND_THRESHOLD_DAYS = 30;
   private static readonly CELL_WIDTH = 36;
-  private barDrag?: { startX: number; startScroll: number };
+  private barDrag?: { startX: number; startThumbPos: number };
   private dragData?: {
     memo: Memo;
     el: HTMLElement;
@@ -514,7 +514,8 @@ export class GanttChartComponent
       host.scrollLeft = this.positionToScroll(pos);
       this.updateScrollbarThumb();
     }
-    this.barDrag = { startX: event.clientX, startScroll: host.scrollLeft };
+    const thumbPos = thumbRect.left - barRect.left;
+    this.barDrag = { startX: event.clientX, startThumbPos: thumbPos };
     document.addEventListener('mousemove', this.onScrollbarMouseMove);
     document.addEventListener('mouseup', this.onScrollbarMouseUp);
     event.preventDefault();
@@ -532,7 +533,7 @@ export class GanttChartComponent
     const track = barRect.width - thumbRect.width;
     const deltaX = e.clientX - this.barDrag.startX;
     const pos = Math.min(
-      Math.max(thumbRect.left - barRect.left + deltaX, 0),
+      Math.max(this.barDrag.startThumbPos + deltaX, 0),
       track,
     );
     host.scrollLeft = this.positionToScroll(pos);
@@ -569,8 +570,7 @@ export class GanttChartComponent
     thumb.style.width = `${thumbWidth}px`;
     const maxScroll = host.scrollWidth - host.clientWidth;
     const track = barWidth - thumbWidth;
-    const pos =
-      maxScroll === 0 ? 0 : (host.scrollLeft / maxScroll) * track;
+    const pos = maxScroll === 0 ? 0 : (host.scrollLeft / maxScroll) * track;
     thumb.style.transform = `translateX(${pos}px)`;
   }
 
