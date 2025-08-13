@@ -51,7 +51,6 @@ export class GanttChartComponent
   @Output() taskClick = new EventEmitter<Task>();
   @Output() rangeChange = new EventEmitter<{ start: Date; end: Date }>();
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
-  @ViewChild('headerHost') private headerHost?: ElementRef<HTMLDivElement>;
   @ViewChild('hScrollbar') private hScrollbar?: ElementRef<HTMLDivElement>;
   @ViewChild('hScrollbarThumb')
   private hScrollbarThumb?: ElementRef<HTMLDivElement>;
@@ -94,6 +93,7 @@ export class GanttChartComponent
   private focusedCellIdx?: { row: number; col: number };
   protected hoveredColIdx: number | null = null;
   protected editingMemoId: string | null = null;
+  private isScrollUpdateScheduled = false;
   protected readonly monthColors = [
     '#e6f4ea', // Jan: light green
     '#e6f7ff', // Feb: light blue
@@ -268,14 +268,16 @@ export class GanttChartComponent
     if (idx < 0) return;
 
     requestAnimationFrame(() => {
-      const header = this.headerHost?.nativeElement;
-      const th = header?.querySelector<HTMLElement>(
+      const th = host.querySelector<HTMLElement>(
         `.head-2 th[data-idx="${idx}"]`,
       );
       const stickyWidth = this.getStickyWidth();
-      if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
+      if (th)
+        host.scrollTo({
+          left: Math.max(th.offsetLeft - stickyWidth, 0),
+          behavior: 'smooth',
+        });
       this.updateScrollbarThumb();
-      this.syncHeader();
     });
   }
 
@@ -284,7 +286,6 @@ export class GanttChartComponent
   }
 
   private onHostScroll = (): void => {
-    this.syncHeader();
     const host = this.scrollHost?.nativeElement;
     if (!host) return;
     this.updateScrollbarThumb();
@@ -305,14 +306,6 @@ export class GanttChartComponent
     } else if (firstVisibleIdx < GanttChartComponent.EXTEND_THRESHOLD_DAYS) {
       this.extendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
     }
-  };
-
-  private syncHeader(): void {
-    const host = this.scrollHost?.nativeElement;
-    const header = this.headerHost?.nativeElement;
-    if (!host || !header) return;
-    header.scrollLeft = host.scrollLeft;
-    header.style.width = `${host.clientWidth}px`;
   }
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
@@ -334,14 +327,11 @@ export class GanttChartComponent
 
   getTodayColumnPosition(): { x: number; y: number } {
     const host = this.scrollHost?.nativeElement;
-    const header = this.headerHost?.nativeElement;
-    if (!host || !header) return { x: 0, y: 0 };
+    if (!host) return { x: 0, y: 0 };
     const headerHeight = this.getHeaderHeight();
     const today = this.getToday();
     const idx = this.dateRange.findIndex((d) => this.isSameDay(d, today));
-    const th = header.querySelector<HTMLElement>(
-      `.head-2 th[data-idx="${idx}"]`,
-    );
+    const th = host.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
     const x = th ? th.offsetLeft : 0;
     return { x, y: headerHeight };
   }
@@ -485,16 +475,17 @@ export class GanttChartComponent
   }
 
   private getStickyWidth(): number {
-    const header = this.headerHost?.nativeElement;
-    if (!header) return 0;
-    const stickyCols = header.querySelectorAll<HTMLElement>(
+    const host = this.scrollHost?.nativeElement;
+    if (!host) return 0;
+    const stickyCols = host.querySelectorAll<HTMLElement>(
       '.head-1 .sticky-left',
     );
     return Array.from(stickyCols).reduce((sum, el) => sum + el.offsetWidth, 0);
   }
 
   private getHeaderHeight(): number {
-    const header = this.headerHost?.nativeElement;
+    const host = this.scrollHost?.nativeElement;
+    const header = host?.querySelector('thead');
     return header?.offsetHeight ?? 0;
   }
 
