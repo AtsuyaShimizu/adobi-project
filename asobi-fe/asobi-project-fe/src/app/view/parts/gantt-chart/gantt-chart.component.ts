@@ -51,6 +51,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   private onResizeMove = (e: MouseEvent) => this.handleResize(e);
   private onResizeUp = () => this.endResize();
   private focusedCell?: { x: number; y: number };
+  private focusedCellIdx?: { row: number; col: number };
+  protected hoveredColIdx: number | null = null;
   protected editingMemoId: string | null = null;
 
   constructor(private cdr: ChangeDetectorRef) {
@@ -198,7 +200,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     });
   }
 
-  onCellMouseDown(event: MouseEvent): void {
+  onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
     const host = this.scrollHost?.nativeElement;
     const cell = event.currentTarget as HTMLElement | null;
     if (!host || !cell) return;
@@ -208,6 +210,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
       x: cellRect.left - hostRect.left + host.scrollLeft,
       y: cellRect.top - hostRect.top + host.scrollTop,
     };
+    this.focusedCellIdx = { row: rowIdx, col: colIdx };
   }
 
   getFocusedCellPosition(): { x: number; y: number } | null {
@@ -236,6 +239,18 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     document.addEventListener('mousemove', this.onMove);
     document.addEventListener('mouseup', this.onUp);
     event.preventDefault();
+  }
+
+  onColumnMouseEnter(colIdx: number): void {
+    this.hoveredColIdx = colIdx;
+  }
+
+  onColumnMouseLeave(): void {
+    this.hoveredColIdx = null;
+  }
+
+  protected isFocusedCell(row: number, col: number): boolean {
+    return this.focusedCellIdx?.row === row && this.focusedCellIdx?.col === col;
   }
 
   onMemoResizeMouseDown(event: MouseEvent, memo: Memo): void {
