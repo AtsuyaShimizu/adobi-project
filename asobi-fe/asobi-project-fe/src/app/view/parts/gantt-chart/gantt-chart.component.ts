@@ -41,6 +41,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   private rangeEnd: Date;
   private static readonly INITIAL_RANGE_DAYS = 90;
   private static readonly EXTEND_DAYS = 30;
+  private static readonly EXTEND_THRESHOLD_DAYS = 30;
+  private static readonly CELL_WIDTH = 36;
   private dragData?: { memo: Memo; el: HTMLElement; offsetX: number; offsetY: number };
   private onMove = (e: MouseEvent) => this.handleDrag(e);
   private onUp = () => this.endDrag();
@@ -203,10 +205,21 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     if (!host) return;
     if (header) header.scrollLeft = host.scrollLeft;
     if (bar) bar.scrollLeft = host.scrollLeft;
+    const stickyWidth = this.getStickyWidth();
+    const scrollLeft = Math.max(host.scrollLeft - stickyWidth, 0);
+    const firstVisibleIdx = Math.floor(
+      scrollLeft / GanttChartComponent.CELL_WIDTH,
+    );
+    const visibleCols = Math.ceil(
+      (host.clientWidth - stickyWidth) / GanttChartComponent.CELL_WIDTH,
+    );
 
-    if (host.scrollLeft + host.clientWidth >= host.scrollWidth - 100) {
+    if (
+      firstVisibleIdx + visibleCols >
+      this.dateRange.length - GanttChartComponent.EXTEND_THRESHOLD_DAYS
+    ) {
       this.extendRight(GanttChartComponent.EXTEND_DAYS);
-    } else if (host.scrollLeft <= 100) {
+    } else if (firstVisibleIdx < GanttChartComponent.EXTEND_THRESHOLD_DAYS) {
       const prevWidth = host.scrollWidth;
       this.extendLeft(GanttChartComponent.EXTEND_DAYS);
       host.scrollLeft += host.scrollWidth - prevWidth;
