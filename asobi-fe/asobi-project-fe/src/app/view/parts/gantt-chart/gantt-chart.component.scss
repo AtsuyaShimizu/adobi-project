@@ -114,6 +114,45 @@
   box-sizing: border-box;
 }
 
+th.col-type,
+th.col-name,
+th.col-assignee {
+  position: relative;
+}
+
+.sort-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  cursor: pointer;
+}
+
+.filter-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 8px;
+  z-index: 10;
+  max-height: 200px;
+  overflow: auto;
+  text-align: left;
+}
+
+.filter-input {
+  width: 100%;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+}
+
+.filter-popup .options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 /* ---------------- ヘッダー固定（2行） ---------------- */
 /* ---------------- ヘッダー ---------------- */
 .gantt-table thead .h {
