@@ -12,7 +12,13 @@
           <th class="h sticky-left col-progress" rowspan="2">進捗率</th>
 
           @for (month of months; track month.label) {
-            <th class="h month" [attr.colspan]="month.days">{{ month.label }}</th>
+            <th
+              class="h month"
+              [attr.colspan]="month.days"
+              [style.backgroundColor]="monthColors[month.month - 1]"
+            >
+              {{ month.label }}
+            </th>
           }
         </tr>
 
@@ -27,7 +33,7 @@
               (mouseleave)="onColumnMouseLeave()"
               [class.column-hover]="hoveredColIdx === i"
             >
-              {{ date | date : 'dd' }}
+              {{ date | date: "dd" }}
             </th>
           }
         </tr>
@@ -45,8 +51,12 @@
               <td class="sticky-left col-type">{{ task.type }}</td>
               <td class="sticky-left col-name">{{ task.name }}</td>
               <td class="sticky-left col-assignee">{{ task.assignee }}</td>
-              <td class="sticky-left col-start">{{ task.start | date : 'yyyy-MM-dd' }}</td>
-              <td class="sticky-left col-end">{{ task.end | date : 'yyyy-MM-dd' }}</td>
+              <td class="sticky-left col-start">
+                {{ task.start | date: "yyyy-MM-dd" }}
+              </td>
+              <td class="sticky-left col-end">
+                {{ task.end | date: "yyyy-MM-dd" }}
+              </td>
               <td class="sticky-left col-progress">{{ task.progress }}%</td>
 
               @for (date of dateRange; track date; let j = $index) {
