@@ -24,6 +24,9 @@
               class="h date-col"
               [attr.data-idx]="i"
               [class.month-boundary]="isMonthStart(date) && i !== 0"
+              (mouseenter)="onColumnMouseEnter(i)"
+              (mouseleave)="onColumnMouseLeave()"
+              [class.column-hover]="hoveredColIdx === i"
             >
               {{ date | date : 'dd' }}
             </th>
@@ -45,7 +48,11 @@
               @for (date of dateRange; track date; let j = $index) {
                 <td
                   class="day"
-                  (mousedown)="onCellMouseDown($event)"
+                  (mousedown)="onCellMouseDown($event, i, j)"
+                  (mouseenter)="onColumnMouseEnter(j)"
+                  (mouseleave)="onColumnMouseLeave()"
+                  [class.column-hover]="hoveredColIdx === j"
+                  [class.focused]="isFocusedCell(i, j)"
                   [class.progress]="isProgress(task, date)"
                   [class.planned]="isPlanned(task, date)"
                   [class.progress-start]="isProgressStart(task, date)"
@@ -61,17 +68,21 @@
               <td class="sticky-left col-assignee"></td>
               <td class="sticky-left col-start"></td>
               <td class="sticky-left col-end"></td>
-              <td class="sticky-left col-progress"></td>
+                <td class="sticky-left col-progress"></td>
 
-              @for (date of dateRange; track date; let j = $index) {
-                <td
-                  class="day"
-                  (mousedown)="onCellMouseDown($event)"
-                  [class.month-boundary]="isMonthStart(date) && j !== 0"
-                ></td>
+                @for (date of dateRange; track date; let j = $index) {
+                  <td
+                    class="day"
+                    (mousedown)="onCellMouseDown($event, i, j)"
+                    (mouseenter)="onColumnMouseEnter(j)"
+                    (mouseleave)="onColumnMouseLeave()"
+                    [class.column-hover]="hoveredColIdx === j"
+                    [class.focused]="isFocusedCell(i, j)"
+                    [class.month-boundary]="isMonthStart(date) && j !== 0"
+                  ></td>
+                }
               }
-            }
-          </tr>
+            </tr>
         }
       </tbody>
     </table>
