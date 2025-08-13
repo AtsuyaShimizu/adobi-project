@@ -25,7 +25,9 @@ import { MemoComponent } from '../memo/memo.component';
   templateUrl: './gantt-chart.component.html',
   styleUrl: './gantt-chart.component.scss',
 })
-export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy {
+export class GanttChartComponent
+  implements AfterViewInit, OnChanges, OnDestroy
+{
   @Input({ required: true }) tasks: Task[] = [];
   @Input({ required: true }) memos: Memo[] = [];
   @Output() memoChange = new EventEmitter<Memo>();
@@ -33,7 +35,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
   @ViewChild('headerHost') private headerHost?: ElementRef<HTMLDivElement>;
   @ViewChild('hScrollbar') private hScrollbar?: ElementRef<HTMLDivElement>;
-  @ViewChild('hScrollbarInner') private hScrollbarInner?: ElementRef<HTMLDivElement>;
+  @ViewChild('hScrollbarInner')
+  private hScrollbarInner?: ElementRef<HTMLDivElement>;
 
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
@@ -43,7 +46,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   private static readonly EXTEND_DAYS = 30;
   private static readonly EXTEND_THRESHOLD_DAYS = 30;
   private static readonly CELL_WIDTH = 36;
-  private dragData?: { memo: Memo; el: HTMLElement; offsetX: number; offsetY: number };
+  private dragData?: {
+    memo: Memo;
+    el: HTMLElement;
+    offsetX: number;
+    offsetY: number;
+  };
   private onMove = (e: MouseEvent) => this.handleDrag(e);
   private onUp = () => this.endDrag();
   private resizeData?: {
@@ -60,6 +68,20 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   private focusedCellIdx?: { row: number; col: number };
   protected hoveredColIdx: number | null = null;
   protected editingMemoId: string | null = null;
+  protected readonly monthColors = [
+    '#e6f4ea', // Jan: light green
+    '#e6f7ff', // Feb: light blue
+    '#f2e6ff', // Mar: light purple
+    '#ffe6f2', // Apr: light pink
+    '#fffbe6', // May: light yellow
+    '#e6fff7', // Jun: light mint
+    '#e6f0ff', // Jul: light azure
+    '#f9e6ff', // Aug: soft violet
+    '#ffe6e6', // Sep: light peach
+    '#e6fff2', // Oct: pale green
+    '#f4ffe6', // Nov: pale lime
+    '#e6f9ff', // Dec: icy blue
+  ];
 
   constructor(private cdr: ChangeDetectorRef) {
     const start = this.getToday();
@@ -67,22 +89,18 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
       start,
       -GanttChartComponent.INITIAL_RANGE_DAYS,
     );
-    this.rangeEnd = this.addDays(
-      start,
-      GanttChartComponent.INITIAL_RANGE_DAYS,
-    );
+    this.rangeEnd = this.addDays(start, GanttChartComponent.INITIAL_RANGE_DAYS);
     this.buildDateRange();
   }
 
-  get months(): { label: string; days: number }[] {
-    const result: { label: string; days: number }[] = [];
+  get months(): { label: string; days: number; month: number }[] {
+    const result: { label: string; days: number; month: number }[] = [];
     this.dateRange.forEach((d) => {
-      const label = `${d.getFullYear()}-${(d.getMonth() + 1)
-        .toString()
-        .padStart(2, '0')}`;
+      const m = d.getMonth() + 1;
+      const label = `${d.getFullYear()}-${m.toString().padStart(2, '0')}`;
       const last = result[result.length - 1];
       if (last && last.label === label) last.days++;
-      else result.push({ label, days: 1 });
+      else result.push({ label, days: 1, month: m });
     });
     return result;
   }
@@ -130,8 +148,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   isPlannedEnd(task: Task, date: Date): boolean {
     return (
-      this.isPlanned(task, date) &&
-      !this.isPlanned(task, this.addDays(date, 1))
+      this.isPlanned(task, date) && !this.isPlanned(task, this.addDays(date, 1))
     );
   }
 
@@ -147,7 +164,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
       host.addEventListener('wheel', this.onWheel, { passive: false });
     }
     const header = this.headerHost?.nativeElement;
-    if (header) header.addEventListener('wheel', this.onWheel, { passive: false });
+    if (header)
+      header.addEventListener('wheel', this.onWheel, { passive: false });
     const bar = this.hScrollbar?.nativeElement;
     if (bar) bar.addEventListener('scroll', this.onHScroll);
     this.updateScrollbarWidth();
@@ -188,7 +206,9 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
 
     requestAnimationFrame(() => {
       const header = this.headerHost?.nativeElement;
-      const th = header?.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
+      const th = header?.querySelector<HTMLElement>(
+        `.head-2 th[data-idx="${idx}"]`,
+      );
       const stickyWidth = this.getStickyWidth();
       if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
     });
@@ -238,7 +258,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   private onWheel = (event: WheelEvent): void => {
     const host = this.scrollHost?.nativeElement;
     if (!host) return;
-    const delta = event.deltaX !== 0 ? event.deltaX : event.shiftKey ? event.deltaY : 0;
+    const delta =
+      event.deltaX !== 0 ? event.deltaX : event.shiftKey ? event.deltaY : 0;
     if (delta !== 0) {
       host.scrollLeft += delta;
       event.preventDefault();
@@ -269,7 +290,9 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     const headerHeight = this.getHeaderHeight();
     const today = this.getToday();
     const idx = this.dateRange.findIndex((d) => this.isSameDay(d, today));
-    const th = header.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
+    const th = header.querySelector<HTMLElement>(
+      `.head-2 th[data-idx="${idx}"]`,
+    );
     const x = th ? th.offsetLeft : 0;
     return { x, y: headerHeight };
   }
@@ -337,11 +360,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     this.memoChange.emit({ ...memo });
   }
 
-  protected toggleEdit(
-    memo: Memo,
-    el: HTMLElement,
-    event: MouseEvent,
-  ): void {
+  protected toggleEdit(memo: Memo, el: HTMLElement, event: MouseEvent): void {
     event.stopPropagation();
     event.preventDefault();
     if (this.editingMemoId === memo.id) {
@@ -361,8 +380,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     const headerHeight = this.getHeaderHeight();
     const x =
       event.clientX - rect.left + host.scrollLeft - this.dragData.offsetX;
-    const y =
-      event.clientY - rect.top + host.scrollTop - this.dragData.offsetY;
+    const y = event.clientY - rect.top + host.scrollTop - this.dragData.offsetY;
     const maxX = host.scrollWidth - this.dragData.el.offsetWidth;
     const maxY = host.scrollHeight - this.dragData.el.offsetHeight;
     this.dragData.memo.x = Math.min(Math.max(x, stickyWidth), maxX);
@@ -372,7 +390,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   private handleResize(event: MouseEvent): void {
     if (!this.resizeData) return;
-    const { el, memo, startX, startY, startWidth, startHeight } = this.resizeData;
+    const { el, memo, startX, startY, startWidth, startHeight } =
+      this.resizeData;
     const width = startWidth + (event.clientX - startX);
     const height = startHeight + (event.clientY - startY);
     el.style.width = `${width}px`;
@@ -417,7 +436,9 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   private getStickyWidth(): number {
     const header = this.headerHost?.nativeElement;
     if (!header) return 0;
-    const stickyCols = header.querySelectorAll<HTMLElement>('.head-1 .sticky-left');
+    const stickyCols = header.querySelectorAll<HTMLElement>(
+      '.head-1 .sticky-left',
+    );
     return Array.from(stickyCols).reduce((sum, el) => sum + el.offsetWidth, 0);
   }
 
@@ -454,7 +475,11 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   private buildDateRange(): void {
     const dates: Date[] = [];
-    for (let d = new Date(this.rangeStart); d <= this.rangeEnd; d.setDate(d.getDate() + 1)) {
+    for (
+      let d = new Date(this.rangeStart);
+      d <= this.rangeEnd;
+      d.setDate(d.getDate() + 1)
+    ) {
       dates.push(new Date(d));
     }
     this.dateRange = dates;
@@ -482,10 +507,16 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   private ensureTaskRange(): void {
     if (this.tasks.length === 0) return;
-    const taskStart = new Date(Math.min(...this.tasks.map((t) => t.start.getTime())));
-    const taskEnd = new Date(Math.max(...this.tasks.map((t) => t.end.getTime())));
-    if (taskStart < this.rangeStart) this.extendLeft(this.diffDays(taskStart, this.rangeStart));
-    if (taskEnd > this.rangeEnd) this.extendRight(this.diffDays(this.rangeEnd, taskEnd));
+    const taskStart = new Date(
+      Math.min(...this.tasks.map((t) => t.start.getTime())),
+    );
+    const taskEnd = new Date(
+      Math.max(...this.tasks.map((t) => t.end.getTime())),
+    );
+    if (taskStart < this.rangeStart)
+      this.extendLeft(this.diffDays(taskStart, this.rangeStart));
+    if (taskEnd > this.rangeEnd)
+      this.extendRight(this.diffDays(this.rangeEnd, taskEnd));
   }
 
   private updateScrollbarWidth(): void {
