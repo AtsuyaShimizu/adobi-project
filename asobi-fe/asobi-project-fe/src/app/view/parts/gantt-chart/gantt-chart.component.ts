@@ -295,7 +295,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     const maxY = host.scrollHeight - this.dragData.el.offsetHeight;
     this.dragData.memo.x = Math.min(Math.max(x, stickyWidth), maxX);
     this.dragData.memo.y = Math.min(Math.max(y, headerHeight), maxY);
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   private handleResize(event: MouseEvent): void {
@@ -307,7 +307,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
     el.style.height = `${height}px`;
     memo.width = el.offsetWidth;
     memo.height = el.offsetHeight;
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   private endDrag(): void {
