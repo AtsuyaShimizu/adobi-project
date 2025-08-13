@@ -6,6 +6,7 @@
   --head1: 28px; /* 月行の高さ */
   --head2: 28px; /* 日付行の高さ */
   --row-h: 24px;
+  --scrollbar-h: 16px;
 
   /* 左6列の幅（累積 left を計算） */
   --w-type: 150px;
@@ -38,8 +39,9 @@
 /* sticky の基準を1つに限定 */
 .scroll-host {
   width: 100%;
-  height: calc(100% - var(--head-total));
-  overflow: auto; /* データ部分のみ */
+  height: calc(100% - var(--head-total) - var(--scrollbar-h));
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   scrollbar-gutter: stable;
 }
@@ -55,15 +57,16 @@
   display: none;
 }
 
-.h-scrollbar-mask {
-  position: sticky;
-  left: 0;
-  bottom: 0;
-  width: var(--left-cols-width);
-  height: 20px;
-  background: var(--color-surface);
-  pointer-events: none;
-  z-index: 30;
+.h-scrollbar {
+  height: var(--scrollbar-h);
+  width: calc(100% - var(--left-cols-width));
+  margin-left: var(--left-cols-width);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.h-scrollbar-inner {
+  height: 1px;
 }
 
 /* sticky と相性が良い separate を採用（Safari 安定） */
