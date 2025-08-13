@@ -19,10 +19,15 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { fromEvent, Subscription } from 'rxjs';
+import { fromEvent, Subscription, debounceTime } from 'rxjs';
 import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
 import { MemoComponent } from '../memo/memo.component';
+import {
+  ScrollAnchor,
+  captureAnchor,
+  restoreFromAnchor,
+} from './gantt-scroll-anchor.util';
 
 interface TaskView {
   task: Task;
@@ -62,6 +67,7 @@ export class GanttChartComponent
 
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
+  protected dateKeys: string[] = [];
   protected taskViews: TaskView[] = [];
   protected filterPopup: FilterName | null = null;
   protected filters: Record<FilterName, FilterState> = {
@@ -107,6 +113,10 @@ export class GanttChartComponent
   protected editingMemoId: string | null = null;
   private isScrolling = false;
   private scrollSub?: Subscription;
+  private scrollStopSub?: Subscription;
+  private pendingPruneLeftDays = 0;
+  private pendingPruneRightDays = 0;
+  private idleHandle: number | null = null;
   private onScrollBound = () => {
     if (this.isScrolling) return;
     this.isScrolling = true;
@@ -205,6 +215,11 @@ export class GanttChartComponent
       this.scrollSub = fromEvent(host, 'scroll', {
         passive: true,
       }).subscribe(this.onScrollBound);
+      this.scrollStopSub = fromEvent(host, 'scroll', {
+        passive: true,
+      })
+        .pipe(debounceTime(300))
+        .subscribe(() => this.flushPrune());
     }
     this.updateScrollbarThumb();
     this.onScrollBound();
@@ -212,6 +227,12 @@ export class GanttChartComponent
 
   ngOnDestroy(): void {
     this.scrollSub?.unsubscribe();
+    this.scrollStopSub?.unsubscribe();
+    if (this.idleHandle !== null) {
+      const w = window as any;
+      if (w.cancelIdleCallback) w.cancelIdleCallback(this.idleHandle);
+      else clearTimeout(this.idleHandle);
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -306,31 +327,43 @@ export class GanttChartComponent
       this.scrollToDate(this.getToday());
     }
 
-    private handleScrollRaf(): void {
-      const host = this.scrollHost?.nativeElement;
-      if (!host) return;
-      this.updateScrollbarThumb();
-      const stickyWidth = this.getStickyWidth();
-      const scrollLeft = host.scrollLeft;
-      const firstVisibleIdx = Math.floor(
-        scrollLeft / GanttChartComponent.CELL_WIDTH,
-      );
-      const visibleCols = Math.ceil(
-        (host.clientWidth - stickyWidth) / GanttChartComponent.CELL_WIDTH,
-      );
-      const remainDays = this.dateRange.length - (firstVisibleIdx + visibleCols);
-      const leftOffscreenDays = firstVisibleIdx;
+  private handleScrollRaf(): void {
+    const host = this.scrollHost?.nativeElement;
+    if (!host) return;
+    this.updateScrollbarThumb();
+    const stickyWidth = this.getStickyWidth();
+    const scrollLeft = host.scrollLeft;
+    const firstVisibleIdx = Math.floor(
+      scrollLeft / GanttChartComponent.CELL_WIDTH,
+    );
+    const visibleCols = Math.ceil(
+      (host.clientWidth - stickyWidth) / GanttChartComponent.CELL_WIDTH,
+    );
+    const rightOffscreenDays =
+      this.dateRange.length - (firstVisibleIdx + visibleCols);
+    const leftOffscreenDays = firstVisibleIdx;
 
-      if (remainDays <= GanttChartComponent.EXTEND_THRESHOLD_DAYS)
-        this.extendRightDays(GanttChartComponent.EXTEND_CHUNK_DAYS); // TODO: Infinite Scroll Smoothness - Range extension
-      if (leftOffscreenDays <= GanttChartComponent.EXTEND_THRESHOLD_DAYS)
-        this.extendLeftDays(GanttChartComponent.EXTEND_CHUNK_DAYS); // TODO: Infinite Scroll Smoothness - Range extension
-      if (
-        this.dateRange.length > GanttChartComponent.MAX_WINDOW_DAYS &&
-        leftOffscreenDays >= GanttChartComponent.PRUNE_THRESHOLD_DAYS
-      )
-        this.pruneLeftDays(GanttChartComponent.PRUNE_CHUNK_DAYS); // TODO: Infinite Scroll Smoothness - Range prune
+    if (rightOffscreenDays <= GanttChartComponent.EXTEND_THRESHOLD_DAYS)
+      this.extendRightDays(GanttChartComponent.EXTEND_CHUNK_DAYS); // TODO: Infinite Scroll Smoothness - Range extension
+    if (leftOffscreenDays <= GanttChartComponent.EXTEND_THRESHOLD_DAYS)
+      this.extendLeftDays(GanttChartComponent.EXTEND_CHUNK_DAYS); // TODO: Infinite Scroll Smoothness - Range extension
+    if (this.dateRange.length > GanttChartComponent.MAX_WINDOW_DAYS) {
+      if (leftOffscreenDays >= GanttChartComponent.PRUNE_THRESHOLD_DAYS) {
+        this.pendingPruneLeftDays = Math.max(
+          this.pendingPruneLeftDays,
+          leftOffscreenDays - GanttChartComponent.PRUNE_THRESHOLD_DAYS,
+        );
+        this.schedulePrune(); // TODO: Infinite Scroll Smoothness - Range prune
+      }
+      if (rightOffscreenDays >= GanttChartComponent.PRUNE_THRESHOLD_DAYS) {
+        this.pendingPruneRightDays = Math.max(
+          this.pendingPruneRightDays,
+          rightOffscreenDays - GanttChartComponent.PRUNE_THRESHOLD_DAYS,
+        );
+        this.schedulePrune(); // TODO: Infinite Scroll Smoothness - Range prune
+      }
     }
+  }
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
     const host = this.scrollHost?.nativeElement;
@@ -539,6 +572,9 @@ export class GanttChartComponent
     result.setDate(result.getDate() + days);
     return result;
   }
+  private getDateKey(date: Date): string {
+    return date.toISOString().slice(0, 10);
+  }
   private getToday(): Date {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -572,9 +608,11 @@ export class GanttChartComponent
       dates.push(new Date(d));
     }
     this.dateRange = dates;
+    this.dateKeys = dates.map((d) => this.getDateKey(d));
   }
 
   private extendRightDays(days: number): void {
+    // TODO: Infinite Scroll Smoothness - Range extension
     this.rangeEnd = this.addDays(this.rangeEnd, days);
     this.buildDateRange();
     this.emitRangeChange();
@@ -583,6 +621,7 @@ export class GanttChartComponent
   }
 
   private extendLeftDays(days: number): void {
+    // TODO: Infinite Scroll Smoothness - Range extension
     const host = this.scrollHost?.nativeElement;
     this.rangeStart = this.addDays(this.rangeStart, -days);
     this.buildDateRange();
@@ -598,17 +637,79 @@ export class GanttChartComponent
 
   private pruneLeftDays(days: number): void {
     const host = this.scrollHost?.nativeElement;
-    const prevStart = new Date(this.rangeStart);
+    if (!host) return;
+    const anchor: ScrollAnchor = captureAnchor(
+      host,
+      GanttChartComponent.CELL_WIDTH,
+      this.dateKeys,
+    );
     this.rangeStart = this.addDays(this.rangeStart, days);
     this.buildDateRange();
     this.emitRangeChange();
     this.cdr.markForCheck();
-    if (host) {
-      const removedDays = this.diffDays(prevStart, this.rangeStart);
+    setTimeout(() => {
       // TODO: Infinite Scroll Smoothness - Scroll position correction
-      host.scrollLeft -= removedDays * GanttChartComponent.CELL_WIDTH;
-    }
+      restoreFromAnchor(
+        host,
+        anchor,
+        GanttChartComponent.CELL_WIDTH,
+        this.dateKeys,
+      );
+    });
     this.updateScrollbarThumb();
+  }
+
+  private pruneRightDays(days: number): void {
+    const host = this.scrollHost?.nativeElement;
+    if (!host) return;
+    const anchor: ScrollAnchor = captureAnchor(
+      host,
+      GanttChartComponent.CELL_WIDTH,
+      this.dateKeys,
+    );
+    this.rangeEnd = this.addDays(this.rangeEnd, -days);
+    this.buildDateRange();
+    this.emitRangeChange();
+    this.cdr.markForCheck();
+    setTimeout(() => {
+      // TODO: Infinite Scroll Smoothness - Scroll position correction
+      restoreFromAnchor(
+        host,
+        anchor,
+        GanttChartComponent.CELL_WIDTH,
+        this.dateKeys,
+      );
+    });
+    this.updateScrollbarThumb();
+  }
+
+  private schedulePrune(): void {
+    if (this.idleHandle !== null) return;
+    const callback = () => {
+      this.idleHandle = null;
+      this.flushPrune();
+    };
+    const w = window as any;
+    if (w.requestIdleCallback) this.idleHandle = w.requestIdleCallback(callback);
+    else this.idleHandle = window.setTimeout(callback, 0);
+  }
+
+  private flushPrune(): void {
+    const chunk = GanttChartComponent.PRUNE_CHUNK_DAYS;
+    while (this.pendingPruneLeftDays >= chunk) {
+      this.pruneLeftDays(chunk);
+      this.pendingPruneLeftDays -= chunk;
+    }
+    while (this.pendingPruneRightDays >= chunk) {
+      this.pruneRightDays(chunk);
+      this.pendingPruneRightDays -= chunk;
+    }
+    if (
+      this.pendingPruneLeftDays >= chunk ||
+      this.pendingPruneRightDays >= chunk
+    ) {
+      this.schedulePrune();
+    }
   }
 
   onScrollbarMouseDown(event: MouseEvent): void {
