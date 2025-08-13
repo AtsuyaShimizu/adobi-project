@@ -39,7 +39,7 @@
 /* sticky の基準を1つに限定 */
 .scroll-host {
   width: 100%;
-  height: calc(100% - var(--head-total) - var(--scrollbar-h));
+  height: calc(100% - var(--scrollbar-h));
   overflow-y: auto;
   overflow-x: auto;
   position: relative;
@@ -49,17 +49,6 @@
 }
 
 .scroll-host::-webkit-scrollbar {
-  display: none;
-}
-
-.header-wrapper {
-  height: var(--head-total);
-  overflow-x: hidden;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  flex: none;
-}
-.header-wrapper::-webkit-scrollbar {
   display: none;
 }
 
@@ -73,7 +62,7 @@
 }
 
 .h-scrollbar::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -1px;
   bottom: 0;
