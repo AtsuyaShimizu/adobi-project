@@ -162,6 +162,15 @@ thead .sticky-left.h {
   background: #f3f4f6;
 }
 
+.gantt-table th.column-hover,
+.gantt-table td.column-hover {
+  background: #f3f4f6;
+}
+
+.gantt-table td.focused {
+  background: #fee2e2 !important;
+}
+
 /* 日付列のヘッダー/ボディ幅 */
 .date-col {
   width: 36px;
