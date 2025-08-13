@@ -30,6 +30,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
   @Input({ required: true }) memos: Memo[] = [];
   @Output() memoChange = new EventEmitter<Memo>();
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
+  @ViewChild('headerHost') private headerHost?: ElementRef<HTMLDivElement>;
 
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
@@ -135,7 +136,9 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
 
   ngAfterViewInit(): void {
     this.scrollToToday();
-    this.setupScrollHandling();
+    const host = this.scrollHost?.nativeElement;
+    if (host) host.addEventListener('scroll', this.onHostScroll);
+    this.onHostScroll();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -159,14 +162,14 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
     if (idx < 0) return;
 
     requestAnimationFrame(() => {
-      const th = host.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
-      const stickyCols = host.querySelectorAll<HTMLElement>(
+      const header = this.headerHost?.nativeElement;
+      const th = header?.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
+      const stickyCols = header?.querySelectorAll<HTMLElement>(
         '.head-1 .sticky-left'
       );
-      const stickyWidth = Array.from(stickyCols).reduce(
-        (sum, el) => sum + el.offsetWidth,
-        0
-      );
+      const stickyWidth = stickyCols
+        ? Array.from(stickyCols).reduce((sum, el) => sum + el.offsetWidth, 0)
+        : 0;
       if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
     });
   }
@@ -175,20 +178,20 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
     this.scrollToDate(this.getToday());
   }
 
-  private setupScrollHandling(): void {
+  private onHostScroll = (): void => {
     const host = this.scrollHost?.nativeElement;
+    const header = this.headerHost?.nativeElement;
     if (!host) return;
+    if (header) header.scrollLeft = host.scrollLeft;
 
-    host.addEventListener('scroll', () => {
-      if (host.scrollLeft + host.clientWidth >= host.scrollWidth - 100) {
-        this.extendRight(GanttChartComponent.EXTEND_DAYS);
-      } else if (host.scrollLeft <= 100) {
-        const prevWidth = host.scrollWidth;
-        this.extendLeft(GanttChartComponent.EXTEND_DAYS);
-        host.scrollLeft += host.scrollWidth - prevWidth;
-      }
-    });
-  }
+    if (host.scrollLeft + host.clientWidth >= host.scrollWidth - 100) {
+      this.extendRight(GanttChartComponent.EXTEND_DAYS);
+    } else if (host.scrollLeft <= 100) {
+      const prevWidth = host.scrollWidth;
+      this.extendLeft(GanttChartComponent.EXTEND_DAYS);
+      host.scrollLeft += host.scrollWidth - prevWidth;
+    }
+  };
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
     const host = this.scrollHost?.nativeElement;
@@ -209,11 +212,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
 
   getTodayColumnPosition(): { x: number; y: number } {
     const host = this.scrollHost?.nativeElement;
-    if (!host) return { x: 0, y: 0 };
-    const headerHeight = this.getHeaderHeight(host);
+    const header = this.headerHost?.nativeElement;
+    if (!host || !header) return { x: 0, y: 0 };
+    const headerHeight = this.getHeaderHeight();
     const today = this.getToday();
     const idx = this.dateRange.findIndex((d) => this.isSameDay(d, today));
-    const th = host.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
+    const th = header.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
     const x = th ? th.offsetLeft : 0;
     return { x, y: headerHeight };
   }
@@ -301,8 +305,8 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
     const host = this.scrollHost?.nativeElement;
     if (!host) return;
     const rect = host.getBoundingClientRect();
-    const stickyWidth = this.getStickyWidth(host);
-    const headerHeight = this.getHeaderHeight(host);
+    const stickyWidth = this.getStickyWidth();
+    const headerHeight = this.getHeaderHeight();
     const x =
       event.clientX - rect.left + host.scrollLeft - this.dragData.offsetX;
     const y =
@@ -354,15 +358,16 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
     return el.querySelector<HTMLElement>('.memo-body')?.innerText ?? '';
   }
 
-  private getStickyWidth(host: HTMLElement): number {
-    const stickyCols = host.querySelectorAll<HTMLElement>('.head-1 .sticky-left');
+  private getStickyWidth(): number {
+    const header = this.headerHost?.nativeElement;
+    if (!header) return 0;
+    const stickyCols = header.querySelectorAll<HTMLElement>('.head-1 .sticky-left');
     return Array.from(stickyCols).reduce((sum, el) => sum + el.offsetWidth, 0);
   }
 
-  private getHeaderHeight(host: HTMLElement): number {
-    const head1 = host.querySelector<HTMLElement>('.head-1');
-    const head2 = host.querySelector<HTMLElement>('.head-2');
-    return (head1?.offsetHeight ?? 0) + (head2?.offsetHeight ?? 0);
+  private getHeaderHeight(): number {
+    const header = this.headerHost?.nativeElement;
+    return header?.offsetHeight ?? 0;
   }
 
   private diffDays(a: Date, b: Date): number {
