@@ -61,13 +61,14 @@
   height: var(--scrollbar-h);
   width: calc(100% - var(--left-cols-width));
   margin-left: var(--left-cols-width);
-  overflow-x: auto;
+  overflow-x: scroll;
   overflow-y: hidden;
   position: relative;
   background: #f3f4f6;
   border-top: 1px solid #e5e7eb;
   scrollbar-color: #9ca3af transparent;
   scrollbar-width: thin;
+  scrollbar-gutter: stable;
 }
 
 .h-scrollbar-inner {

@@ -165,7 +165,10 @@ export class GanttChartComponent
     if (header)
       header.addEventListener('wheel', this.onWheel, { passive: false });
     const bar = this.hScrollbar?.nativeElement;
-    if (bar) bar.addEventListener('scroll', this.onHScroll);
+    if (bar) {
+      bar.addEventListener('scroll', this.onHScroll);
+      bar.addEventListener('wheel', this.onWheel, { passive: false });
+    }
     this.updateScrollbarWidth();
     this.onHostScroll();
   }
@@ -179,7 +182,10 @@ export class GanttChartComponent
     const header = this.headerHost?.nativeElement;
     if (header) header.removeEventListener('wheel', this.onWheel);
     const bar = this.hScrollbar?.nativeElement;
-    if (bar) bar.removeEventListener('scroll', this.onHScroll);
+    if (bar) {
+      bar.removeEventListener('scroll', this.onHScroll);
+      bar.removeEventListener('wheel', this.onWheel);
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -269,6 +275,7 @@ export class GanttChartComponent
     if (delta !== 0) {
       host.scrollLeft += delta;
       event.preventDefault();
+      event.stopPropagation();
     }
   };
 
