@@ -116,7 +116,7 @@
       }
     </div>
   </div>
-  <div class="h-scrollbar" #hScrollbar>
-    <div class="h-scrollbar-inner" #hScrollbarInner></div>
+  <div class="h-scrollbar" #hScrollbar (mousedown)="onScrollbarMouseDown($event)">
+    <div class="h-scrollbar-thumb" #hScrollbarThumb></div>
   </div>
 </div>

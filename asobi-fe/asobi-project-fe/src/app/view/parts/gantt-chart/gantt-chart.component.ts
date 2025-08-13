@@ -42,8 +42,8 @@ export class GanttChartComponent
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
   @ViewChild('headerHost') private headerHost?: ElementRef<HTMLDivElement>;
   @ViewChild('hScrollbar') private hScrollbar?: ElementRef<HTMLDivElement>;
-  @ViewChild('hScrollbarInner')
-  private hScrollbarInner?: ElementRef<HTMLDivElement>;
+  @ViewChild('hScrollbarThumb')
+  private hScrollbarThumb?: ElementRef<HTMLDivElement>;
 
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
@@ -54,6 +54,9 @@ export class GanttChartComponent
   private static readonly EXTEND_DAYS = 30;
   private static readonly EXTEND_THRESHOLD_DAYS = 30;
   private static readonly CELL_WIDTH = 36;
+  private barDrag?: { startX: number; startScroll: number };
+  private wheelDelta = 0;
+  private wheelFrame = false;
   private dragData?: {
     memo: Memo;
     el: HTMLElement;
@@ -166,10 +169,9 @@ export class GanttChartComponent
       header.addEventListener('wheel', this.onWheel, { passive: false });
     const bar = this.hScrollbar?.nativeElement;
     if (bar) {
-      bar.addEventListener('scroll', this.onHScroll);
       bar.addEventListener('wheel', this.onWheel, { passive: false });
     }
-    this.updateScrollbarWidth();
+    this.updateScrollbarThumb();
     this.onHostScroll();
   }
 
@@ -183,7 +185,6 @@ export class GanttChartComponent
     if (header) header.removeEventListener('wheel', this.onWheel);
     const bar = this.hScrollbar?.nativeElement;
     if (bar) {
-      bar.removeEventListener('scroll', this.onHScroll);
       bar.removeEventListener('wheel', this.onWheel);
     }
   }
@@ -223,6 +224,7 @@ export class GanttChartComponent
       );
       const stickyWidth = this.getStickyWidth();
       if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
+      this.updateScrollbarThumb();
     });
   }
 
@@ -233,10 +235,9 @@ export class GanttChartComponent
   private onHostScroll = (): void => {
     const host = this.scrollHost?.nativeElement;
     const header = this.headerHost?.nativeElement;
-    const bar = this.hScrollbar?.nativeElement;
     if (!host) return;
     if (header) header.scrollLeft = host.scrollLeft;
-    if (bar) bar.scrollLeft = host.scrollLeft;
+    this.updateScrollbarThumb();
     const stickyWidth = this.getStickyWidth();
     const scrollLeft = Math.max(host.scrollLeft - stickyWidth, 0);
     const firstVisibleIdx = Math.floor(
@@ -258,24 +259,23 @@ export class GanttChartComponent
     }
   };
 
-  private onHScroll = (): void => {
-    const host = this.scrollHost?.nativeElement;
-    const header = this.headerHost?.nativeElement;
-    const bar = this.hScrollbar?.nativeElement;
-    if (!host || !bar) return;
-    host.scrollLeft = bar.scrollLeft;
-    if (header) header.scrollLeft = bar.scrollLeft;
-  };
-
   private onWheel = (event: WheelEvent): void => {
     const host = this.scrollHost?.nativeElement;
     if (!host) return;
     const delta =
       event.deltaX !== 0 ? event.deltaX : event.shiftKey ? event.deltaY : 0;
     if (delta !== 0) {
-      host.scrollLeft += delta;
       event.preventDefault();
       event.stopPropagation();
+      this.wheelDelta += delta;
+      if (!this.wheelFrame) {
+        this.wheelFrame = true;
+        requestAnimationFrame(() => {
+          host.scrollLeft += this.wheelDelta;
+          this.wheelDelta = 0;
+          this.wheelFrame = false;
+        });
+      }
     }
   };
 
@@ -506,7 +506,7 @@ export class GanttChartComponent
     }
     this.rangeEnd = this.addDays(this.rangeEnd, days);
     this.cdr.markForCheck();
-    this.updateScrollbarWidth();
+    this.updateScrollbarThumb();
   }
 
   private extendLeft(days: number): void {
@@ -517,7 +517,7 @@ export class GanttChartComponent
     this.dateRange = [...newDates, ...this.dateRange];
     this.rangeStart = this.addDays(this.rangeStart, -days);
     this.cdr.markForCheck();
-    this.updateScrollbarWidth();
+    this.updateScrollbarThumb();
   }
 
   private ensureTaskRange(): void {
@@ -534,11 +534,78 @@ export class GanttChartComponent
       this.extendRight(this.diffDays(this.rangeEnd, taskEnd));
   }
 
-  private updateScrollbarWidth(): void {
+  onScrollbarMouseDown(event: MouseEvent): void {
     const host = this.scrollHost?.nativeElement;
-    const inner = this.hScrollbarInner?.nativeElement;
-    if (!host || !inner) return;
+    const bar = this.hScrollbar?.nativeElement;
+    const thumb = this.hScrollbarThumb?.nativeElement;
+    if (!host || !bar || !thumb) return;
+    const barRect = bar.getBoundingClientRect();
+    const thumbRect = thumb.getBoundingClientRect();
+    const clickX = event.clientX - barRect.left;
+    if (event.target !== thumb) {
+      const pos = clickX - thumbRect.width / 2;
+      host.scrollLeft = this.positionToScroll(pos);
+      this.updateScrollbarThumb();
+    }
+    this.barDrag = { startX: event.clientX, startScroll: host.scrollLeft };
+    document.addEventListener('mousemove', this.onScrollbarMouseMove);
+    document.addEventListener('mouseup', this.onScrollbarMouseUp);
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  private onScrollbarMouseMove = (e: MouseEvent): void => {
+    if (!this.barDrag) return;
+    const host = this.scrollHost?.nativeElement;
+    const bar = this.hScrollbar?.nativeElement;
+    const thumb = this.hScrollbarThumb?.nativeElement;
+    if (!host || !bar || !thumb) return;
+    const barRect = bar.getBoundingClientRect();
+    const thumbRect = thumb.getBoundingClientRect();
+    const track = barRect.width - thumbRect.width;
+    const deltaX = e.clientX - this.barDrag.startX;
+    const pos = Math.min(
+      Math.max(thumbRect.left - barRect.left + deltaX, 0),
+      track,
+    );
+    host.scrollLeft = this.positionToScroll(pos);
+    this.updateScrollbarThumb();
+  };
+
+  private onScrollbarMouseUp = (): void => {
+    document.removeEventListener('mousemove', this.onScrollbarMouseMove);
+    document.removeEventListener('mouseup', this.onScrollbarMouseUp);
+    this.barDrag = undefined;
+  };
+
+  private positionToScroll(pos: number): number {
+    const host = this.scrollHost?.nativeElement;
+    const bar = this.hScrollbar?.nativeElement;
+    const thumb = this.hScrollbarThumb?.nativeElement;
+    if (!host || !bar || !thumb) return 0;
     const stickyWidth = this.getStickyWidth();
-    inner.style.width = `${host.scrollWidth - stickyWidth}px`;
+    const visible = host.clientWidth - stickyWidth;
+    const total = host.scrollWidth - stickyWidth;
+    const track = bar.clientWidth - thumb.clientWidth;
+    const ratio = track === 0 ? 0 : pos / track;
+    return stickyWidth + (total - visible) * ratio;
+  }
+
+  private updateScrollbarThumb(): void {
+    const host = this.scrollHost?.nativeElement;
+    const bar = this.hScrollbar?.nativeElement;
+    const thumb = this.hScrollbarThumb?.nativeElement;
+    if (!host || !bar || !thumb) return;
+    const stickyWidth = this.getStickyWidth();
+    const visible = host.clientWidth - stickyWidth;
+    const total = host.scrollWidth - stickyWidth;
+    const barWidth = bar.clientWidth;
+    const thumbWidth = total === 0 ? barWidth : (visible / total) * barWidth;
+    thumb.style.width = `${thumbWidth}px`;
+    const maxScroll = total - visible;
+    const scrollLeft = Math.max(host.scrollLeft - stickyWidth, 0);
+    const track = barWidth - thumbWidth;
+    const pos = maxScroll === 0 ? 0 : (scrollLeft / maxScroll) * track;
+    thumb.style.transform = `translateX(${pos}px)`;
   }
 }
