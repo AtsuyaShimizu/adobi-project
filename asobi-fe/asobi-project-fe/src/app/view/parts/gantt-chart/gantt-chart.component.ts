@@ -10,6 +10,7 @@ import {
   SimpleChanges,
   Output,
   ViewChild,
+  OnDestroy,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Task } from '../../../domain/model/task';
@@ -24,7 +25,7 @@ import { MemoComponent } from '../memo/memo.component';
   templateUrl: './gantt-chart.component.html',
   styleUrl: './gantt-chart.component.scss',
 })
-export class GanttChartComponent implements AfterViewInit, OnChanges {
+export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input({ required: true }) tasks: Task[] = [];
   @Input({ required: true }) memos: Memo[] = [];
   @Output() memoChange = new EventEmitter<Memo>();
@@ -133,6 +134,16 @@ export class GanttChartComponent implements AfterViewInit, OnChanges {
   ngAfterViewInit(): void {
     this.scrollToToday();
     this.setupScrollHandling();
+  }
+
+  ngOnDestroy(): void {
+    const host = this.scrollHost?.nativeElement;
+    if (host) host.removeEventListener('scroll', this.onHostScroll);
+    // 念のためドラッグ中に破棄された場合にもリスナ解除
+    document.removeEventListener('mousemove', this.onMove);
+    document.removeEventListener('mouseup', this.onUp);
+    document.removeEventListener('mousemove', this.onResizeMove);
+    document.removeEventListener('mouseup', this.onResizeUp);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
