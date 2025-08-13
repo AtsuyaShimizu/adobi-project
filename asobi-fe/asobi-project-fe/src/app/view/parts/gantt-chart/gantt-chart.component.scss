@@ -46,6 +46,7 @@
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
   scrollbar-width: none;
+  scroll-behavior: smooth;
 }
 
 .scroll-host::-webkit-scrollbar {
@@ -93,6 +94,7 @@
   border-radius: 4px;
   cursor: pointer;
   user-select: none;
+  will-change: transform;
 }
 
 /* sticky と相性が良い separate を採用（Safari 安定） */
