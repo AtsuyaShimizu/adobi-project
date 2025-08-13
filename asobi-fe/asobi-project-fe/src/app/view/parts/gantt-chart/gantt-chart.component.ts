@@ -52,7 +52,7 @@ export class GanttChartComponent
   protected taskViews: TaskView[] = [];
   private rangeStart: Date;
   private rangeEnd: Date;
-  private static readonly INITIAL_MONTHS = 3;
+  private static readonly INITIAL_MONTHS = 6;
   private static readonly EXTEND_MONTHS = 2;
   private static readonly EXTEND_THRESHOLD_DAYS = 30;
   private static readonly CELL_WIDTH = 36;
