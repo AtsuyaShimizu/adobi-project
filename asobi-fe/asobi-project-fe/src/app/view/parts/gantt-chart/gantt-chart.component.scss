@@ -44,6 +44,7 @@
   overflow-x: hidden;
   position: relative;
   scrollbar-gutter: stable;
+  overscroll-behavior: contain;
 }
 
 .header-wrapper {
@@ -61,18 +62,9 @@
   height: var(--scrollbar-h);
   width: calc(100% - var(--left-cols-width));
   margin-left: var(--left-cols-width);
-  overflow-x: scroll;
-  overflow-y: hidden;
   position: relative;
   background: #f3f4f6;
   border-top: 1px solid #e5e7eb;
-  scrollbar-color: #9ca3af transparent;
-  scrollbar-width: thin;
-  scrollbar-gutter: stable;
-}
-
-.h-scrollbar-inner {
-  height: 1px;
 }
 
 .h-scrollbar::before {
@@ -86,17 +78,16 @@
   border-top: 1px solid #e5e7eb;
 }
 
-.h-scrollbar::-webkit-scrollbar {
-  height: 8px;
-}
-
-.h-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.h-scrollbar::-webkit-scrollbar-thumb {
+.h-scrollbar-thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  width: 40px;
   background: #9ca3af;
   border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* sticky と相性が良い separate を採用（Safari 安定） */
