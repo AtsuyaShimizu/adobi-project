@@ -1,5 +1,5 @@
 <div class="gantt-container" (click)="closeFilterPopup()">
-  <div class="header-wrapper" #headerHost>
+  <div class="scroll-host" #scrollHost>
     <table class="gantt-table">
       <thead>
         <!-- 1行目：左6列は実際に rowspan=2（タスクヘッダーは1セルで2行分） -->
@@ -12,7 +12,7 @@
               class="sort-icon"
               (click)="toggleFilterPopup('type', $event)"
             />
-            @if (filterPopup === 'type') {
+            @if (filterPopup === "type") {
               <div class="filter-popup" (click)="$event.stopPropagation()">
                 <input
                   type="text"
@@ -20,12 +20,14 @@
                   [(ngModel)]="filters.type.keyword"
                 />
                 <div class="options">
-                  @for (opt of getFilteredOptions('type'); track opt) {
+                  @for (opt of getFilteredOptions("type"); track opt) {
                     <label>
                       <input
                         type="checkbox"
                         [checked]="filters.type.selected.has(opt)"
-                        (change)="onFilterChange('type', opt, $event.target.checked)"
+                        (change)="
+                          onFilterChange('type', opt, $event.target.checked)
+                        "
                       />
                       {{ opt }}
                     </label>
@@ -42,7 +44,7 @@
               class="sort-icon"
               (click)="toggleFilterPopup('name', $event)"
             />
-            @if (filterPopup === 'name') {
+            @if (filterPopup === "name") {
               <div class="filter-popup" (click)="$event.stopPropagation()">
                 <input
                   type="text"
@@ -50,12 +52,14 @@
                   [(ngModel)]="filters.name.keyword"
                 />
                 <div class="options">
-                  @for (opt of getFilteredOptions('name'); track opt) {
+                  @for (opt of getFilteredOptions("name"); track opt) {
                     <label>
                       <input
                         type="checkbox"
                         [checked]="filters.name.selected.has(opt)"
-                        (change)="onFilterChange('name', opt, $event.target.checked)"
+                        (change)="
+                          onFilterChange('name', opt, $event.target.checked)
+                        "
                       />
                       {{ opt }}
                     </label>
@@ -72,7 +76,7 @@
               class="sort-icon"
               (click)="toggleFilterPopup('assignee', $event)"
             />
-            @if (filterPopup === 'assignee') {
+            @if (filterPopup === "assignee") {
               <div class="filter-popup" (click)="$event.stopPropagation()">
                 <input
                   type="text"
@@ -80,12 +84,14 @@
                   [(ngModel)]="filters.assignee.keyword"
                 />
                 <div class="options">
-                  @for (opt of getFilteredOptions('assignee'); track opt) {
+                  @for (opt of getFilteredOptions("assignee"); track opt) {
                     <label>
                       <input
                         type="checkbox"
                         [checked]="filters.assignee.selected.has(opt)"
-                        (change)="onFilterChange('assignee', opt, $event.target.checked)"
+                        (change)="
+                          onFilterChange('assignee', opt, $event.target.checked)
+                        "
                       />
                       {{ opt }}
                     </label>
@@ -125,12 +131,6 @@
           }
         </tr>
       </thead>
-    </table>
-  </div>
-
-  <!-- データ部分のみスクロール -->
-  <div class="scroll-host" #scrollHost>
-    <table class="gantt-table">
       <tbody>
         @for (row of emptyRows; track $index; let i = $index) {
           @if (taskViews[i]; as view) {
@@ -144,7 +144,9 @@
               <td class="sticky-left col-end">
                 {{ view.task.end | date: "yyyy-MM-dd" }}
               </td>
-              <td class="sticky-left col-progress">{{ view.task.progress }}%</td>
+              <td class="sticky-left col-progress">
+                {{ view.task.progress }}%
+              </td>
 
               @for (date of dateRange; track date; let j = $index) {
                 <td
@@ -203,7 +205,11 @@
       }
     </div>
   </div>
-  <div class="h-scrollbar" #hScrollbar (mousedown)="onScrollbarMouseDown($event)">
+  <div
+    class="h-scrollbar"
+    #hScrollbar
+    (mousedown)="onScrollbarMouseDown($event)"
+  >
     <div class="h-scrollbar-thumb" #hScrollbarThumb></div>
   </div>
 </div>
