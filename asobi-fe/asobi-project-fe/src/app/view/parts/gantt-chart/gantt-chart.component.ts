@@ -76,6 +76,8 @@ export class GanttChartComponent
     el: HTMLElement;
     offsetX: number;
     offsetY: number;
+    stickyWidth: number;
+    headerHeight: number;
   };
   private onMove = (e: MouseEvent) => this.handleDrag(e);
   private onUp = () => this.endDrag();
@@ -86,6 +88,8 @@ export class GanttChartComponent
     startY: number;
     startWidth: number;
     startHeight: number;
+    stickyWidth: number;
+    headerHeight: number;
   };
   private onResizeMove = (e: MouseEvent) => this.handleResize(e);
   private onResizeUp = () => this.endResize();
@@ -343,7 +347,16 @@ export class GanttChartComponent
     const rect = el.getBoundingClientRect();
     const offsetX = event.clientX - rect.left;
     const offsetY = event.clientY - rect.top;
-    this.dragData = { memo, el, offsetX, offsetY };
+    const stickyWidth = this.getStickyWidth();
+    const headerHeight = this.getHeaderHeight();
+    this.dragData = {
+      memo,
+      el,
+      offsetX,
+      offsetY,
+      stickyWidth,
+      headerHeight,
+    };
     document.addEventListener('mousemove', this.onMove);
     document.addEventListener('mouseup', this.onUp);
     event.preventDefault();
@@ -369,6 +382,8 @@ export class GanttChartComponent
     const handle = event.currentTarget as HTMLElement | null;
     const el = handle?.parentElement as HTMLElement | null;
     if (!el) return;
+    const stickyWidth = this.getStickyWidth();
+    const headerHeight = this.getHeaderHeight();
     this.resizeData = {
       memo,
       el,
@@ -376,6 +391,8 @@ export class GanttChartComponent
       startY: event.clientY,
       startWidth: el.offsetWidth,
       startHeight: el.offsetHeight,
+      stickyWidth,
+      headerHeight,
     };
     document.addEventListener('mousemove', this.onResizeMove);
     document.addEventListener('mouseup', this.onResizeUp);
@@ -417,15 +434,20 @@ export class GanttChartComponent
     const host = this.scrollHost?.nativeElement;
     if (!host) return;
     const rect = host.getBoundingClientRect();
-    const stickyWidth = this.getStickyWidth();
-    const headerHeight = this.getHeaderHeight();
-    const x =
-      event.clientX - rect.left + host.scrollLeft - this.dragData.offsetX;
-    const y = event.clientY - rect.top + host.scrollTop - this.dragData.offsetY;
-    const maxX = host.scrollWidth - this.dragData.el.offsetWidth;
-    const maxY = host.scrollHeight - this.dragData.el.offsetHeight;
-    this.dragData.memo.x = Math.min(Math.max(x, stickyWidth), maxX);
-    this.dragData.memo.y = Math.min(Math.max(y, headerHeight), maxY);
+    const {
+      offsetX,
+      offsetY,
+      stickyWidth,
+      headerHeight,
+      el,
+      memo,
+    } = this.dragData;
+    const x = event.clientX - rect.left + host.scrollLeft - offsetX;
+    const y = event.clientY - rect.top + host.scrollTop - offsetY;
+    const maxX = host.scrollWidth - el.offsetWidth;
+    const maxY = host.scrollHeight - el.offsetHeight;
+    memo.x = Math.min(Math.max(x, stickyWidth), maxX);
+    memo.y = Math.min(Math.max(y, headerHeight), maxY);
     this.cdr.detectChanges();
   }
 
