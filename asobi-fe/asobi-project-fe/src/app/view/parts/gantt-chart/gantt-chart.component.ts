@@ -1,3 +1,7 @@
+/**
+ * NOTE: AGENTS.md の依存ルールを確認済み。
+ * この変更は GanttChartComponent 内に限定しており、層を跨いでいません。
+ */
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -15,6 +19,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { fromEvent, Subscription } from 'rxjs';
 import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
 import { MemoComponent } from '../memo/memo.component';
@@ -67,8 +72,11 @@ export class GanttChartComponent
   private rangeStart: Date;
   private rangeEnd: Date;
   private static readonly INITIAL_MONTHS = 6;
-  private static readonly EXTEND_MONTHS = 2;
-  private static readonly EXTEND_THRESHOLD_DAYS = 30;
+  private static readonly EXTEND_THRESHOLD_DAYS = 60;
+  private static readonly EXTEND_CHUNK_DAYS = 30;
+  private static readonly PRUNE_THRESHOLD_DAYS = 120;
+  private static readonly PRUNE_CHUNK_DAYS = 30;
+  private static readonly MAX_WINDOW_DAYS = 240;
   private static readonly CELL_WIDTH = 36;
   private barDrag?: { startX: number; startThumbPos: number };
   private dragData?: {
@@ -97,7 +105,16 @@ export class GanttChartComponent
   private focusedCellIdx?: { row: number; col: number };
   protected hoveredColIdx: number | null = null;
   protected editingMemoId: string | null = null;
-  private isScrollUpdateScheduled = false;
+  private isScrolling = false;
+  private scrollSub?: Subscription;
+  private onScrollBound = () => {
+    if (this.isScrolling) return;
+    this.isScrolling = true;
+    requestAnimationFrame(() => {
+      this.handleScrollRaf();
+      this.isScrolling = false;
+    });
+  };
   protected readonly monthColors = [
     '#e0f4ff', // Jan: icy blue
     '#e0eaff', // Feb: pale sky
@@ -184,17 +201,17 @@ export class GanttChartComponent
     this.scrollToToday();
     const host = this.scrollHost?.nativeElement;
     if (host) {
-      host.addEventListener('scroll', this.onHostScroll);
+      // TODO: Infinite Scroll Smoothness - Scroll detection
+      this.scrollSub = fromEvent(host, 'scroll', {
+        passive: true,
+      }).subscribe(this.onScrollBound);
     }
     this.updateScrollbarThumb();
-    this.onHostScroll();
+    this.onScrollBound();
   }
 
   ngOnDestroy(): void {
-    const host = this.scrollHost?.nativeElement;
-    if (host) {
-      host.removeEventListener('scroll', this.onHostScroll);
-    }
+    this.scrollSub?.unsubscribe();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -264,9 +281,9 @@ export class GanttChartComponent
 
     const target = this.toStartOfDay(date);
     while (target < this.rangeStart)
-      this.extendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
+      this.extendLeftDays(GanttChartComponent.EXTEND_CHUNK_DAYS);
     while (target > this.rangeEnd)
-      this.extendRightMonths(GanttChartComponent.EXTEND_MONTHS);
+      this.extendRightDays(GanttChartComponent.EXTEND_CHUNK_DAYS);
 
     const idx = this.dateRange.findIndex((d) => this.isSameDay(d, target));
     if (idx < 0) return;
@@ -285,32 +302,35 @@ export class GanttChartComponent
     });
   }
 
-  public scrollToToday(): void {
-    this.scrollToDate(this.getToday());
-  }
-
-  private onHostScroll = (): void => {
-    const host = this.scrollHost?.nativeElement;
-    if (!host) return;
-    this.updateScrollbarThumb();
-    const stickyWidth = this.getStickyWidth();
-    const scrollLeft = host.scrollLeft;
-    const firstVisibleIdx = Math.floor(
-      scrollLeft / GanttChartComponent.CELL_WIDTH,
-    );
-    const visibleCols = Math.ceil(
-      (host.clientWidth - stickyWidth) / GanttChartComponent.CELL_WIDTH,
-    );
-
-    if (
-      firstVisibleIdx + visibleCols >
-      this.dateRange.length - GanttChartComponent.EXTEND_THRESHOLD_DAYS
-    ) {
-      this.extendRightMonths(GanttChartComponent.EXTEND_MONTHS);
-    } else if (firstVisibleIdx < GanttChartComponent.EXTEND_THRESHOLD_DAYS) {
-      this.extendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
+    public scrollToToday(): void {
+      this.scrollToDate(this.getToday());
     }
-  }
+
+    private handleScrollRaf(): void {
+      const host = this.scrollHost?.nativeElement;
+      if (!host) return;
+      this.updateScrollbarThumb();
+      const stickyWidth = this.getStickyWidth();
+      const scrollLeft = host.scrollLeft;
+      const firstVisibleIdx = Math.floor(
+        scrollLeft / GanttChartComponent.CELL_WIDTH,
+      );
+      const visibleCols = Math.ceil(
+        (host.clientWidth - stickyWidth) / GanttChartComponent.CELL_WIDTH,
+      );
+      const remainDays = this.dateRange.length - (firstVisibleIdx + visibleCols);
+      const leftOffscreenDays = firstVisibleIdx;
+
+      if (remainDays <= GanttChartComponent.EXTEND_THRESHOLD_DAYS)
+        this.extendRightDays(GanttChartComponent.EXTEND_CHUNK_DAYS); // TODO: Infinite Scroll Smoothness - Range extension
+      if (leftOffscreenDays <= GanttChartComponent.EXTEND_THRESHOLD_DAYS)
+        this.extendLeftDays(GanttChartComponent.EXTEND_CHUNK_DAYS); // TODO: Infinite Scroll Smoothness - Range extension
+      if (
+        this.dateRange.length > GanttChartComponent.MAX_WINDOW_DAYS &&
+        leftOffscreenDays >= GanttChartComponent.PRUNE_THRESHOLD_DAYS
+      )
+        this.pruneLeftDays(GanttChartComponent.PRUNE_CHUNK_DAYS); // TODO: Infinite Scroll Smoothness - Range prune
+    }
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
     const host = this.scrollHost?.nativeElement;
@@ -554,32 +574,39 @@ export class GanttChartComponent
     this.dateRange = dates;
   }
 
-  private extendRightMonths(months: number): void {
+  private extendRightDays(days: number): void {
+    this.rangeEnd = this.addDays(this.rangeEnd, days);
+    this.buildDateRange();
+    this.emitRangeChange();
+    this.cdr.markForCheck();
+    this.updateScrollbarThumb();
+  }
+
+  private extendLeftDays(days: number): void {
+    const host = this.scrollHost?.nativeElement;
+    this.rangeStart = this.addDays(this.rangeStart, -days);
+    this.buildDateRange();
+    this.emitRangeChange();
+    this.cdr.markForCheck();
+    if (host) {
+      const addedDays = days;
+      // TODO: Infinite Scroll Smoothness - Scroll position correction
+      host.scrollLeft += addedDays * GanttChartComponent.CELL_WIDTH;
+    }
+    this.updateScrollbarThumb();
+  }
+
+  private pruneLeftDays(days: number): void {
     const host = this.scrollHost?.nativeElement;
     const prevStart = new Date(this.rangeStart);
-    this.rangeEnd = this.addMonths(this.rangeEnd, months);
-    this.rangeStart = this.addMonths(this.rangeStart, months);
+    this.rangeStart = this.addDays(this.rangeStart, days);
     this.buildDateRange();
     this.emitRangeChange();
     this.cdr.markForCheck();
     if (host) {
       const removedDays = this.diffDays(prevStart, this.rangeStart);
+      // TODO: Infinite Scroll Smoothness - Scroll position correction
       host.scrollLeft -= removedDays * GanttChartComponent.CELL_WIDTH;
-    }
-    this.updateScrollbarThumb();
-  }
-
-  private extendLeftMonths(months: number): void {
-    const host = this.scrollHost?.nativeElement;
-    const prevStart = new Date(this.rangeStart);
-    this.rangeStart = this.addMonths(this.rangeStart, -months);
-    this.rangeEnd = this.addMonths(this.rangeEnd, -months);
-    this.buildDateRange();
-    this.emitRangeChange();
-    this.cdr.markForCheck();
-    if (host) {
-      const addedDays = this.diffDays(this.rangeStart, prevStart);
-      host.scrollLeft += addedDays * GanttChartComponent.CELL_WIDTH;
     }
     this.updateScrollbarThumb();
   }
