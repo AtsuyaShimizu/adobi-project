@@ -140,7 +140,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   ngAfterViewInit(): void {
     this.scrollToToday();
     const host = this.scrollHost?.nativeElement;
-    if (host) host.addEventListener('scroll', this.onHostScroll);
+    if (host) {
+      host.addEventListener('scroll', this.onHostScroll);
+      host.addEventListener('wheel', this.onWheel, { passive: false });
+    }
+    const header = this.headerHost?.nativeElement;
+    if (header) header.addEventListener('wheel', this.onWheel, { passive: false });
     const bar = this.hScrollbar?.nativeElement;
     if (bar) bar.addEventListener('scroll', this.onHScroll);
     this.updateScrollbarWidth();
@@ -149,7 +154,12 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   ngOnDestroy(): void {
     const host = this.scrollHost?.nativeElement;
-    if (host) host.removeEventListener('scroll', this.onHostScroll);
+    if (host) {
+      host.removeEventListener('scroll', this.onHostScroll);
+      host.removeEventListener('wheel', this.onWheel);
+    }
+    const header = this.headerHost?.nativeElement;
+    if (header) header.removeEventListener('wheel', this.onWheel);
     const bar = this.hScrollbar?.nativeElement;
     if (bar) bar.removeEventListener('scroll', this.onHScroll);
   }
@@ -210,6 +220,16 @@ export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     if (!host || !bar) return;
     host.scrollLeft = bar.scrollLeft;
     if (header) header.scrollLeft = bar.scrollLeft;
+  };
+
+  private onWheel = (event: WheelEvent): void => {
+    const host = this.scrollHost?.nativeElement;
+    if (!host) return;
+    const delta = event.deltaX !== 0 ? event.deltaX : event.shiftKey ? event.deltaY : 0;
+    if (delta !== 0) {
+      host.scrollLeft += delta;
+      event.preventDefault();
+    }
   };
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
