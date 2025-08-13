@@ -1,6 +1,5 @@
 <div class="gantt-container">
-  <!-- 縦横のスクロール祖先はこの1つだけ -->
-  <div class="scroll-host" #scrollHost>
+  <div class="header-wrapper" #headerHost>
     <table class="gantt-table">
       <thead>
         <!-- 1行目：左6列は実際に rowspan=2（タスクヘッダーは1セルで2行分） -->
@@ -33,7 +32,12 @@
           }
         </tr>
       </thead>
+    </table>
+  </div>
 
+  <!-- データ部分のみスクロール -->
+  <div class="scroll-host" #scrollHost>
+    <table class="gantt-table">
       <tbody>
         @for (row of emptyRows; track $index; let i = $index) {
           <tr>
@@ -68,36 +72,37 @@
               <td class="sticky-left col-assignee"></td>
               <td class="sticky-left col-start"></td>
               <td class="sticky-left col-end"></td>
-                <td class="sticky-left col-progress"></td>
+              <td class="sticky-left col-progress"></td>
 
-                @for (date of dateRange; track date; let j = $index) {
-                  <td
-                    class="day"
-                    (mousedown)="onCellMouseDown($event, i, j)"
-                    (mouseenter)="onColumnMouseEnter(j)"
-                    (mouseleave)="onColumnMouseLeave()"
-                    [class.column-hover]="hoveredColIdx === j"
-                    [class.focused]="isFocusedCell(i, j)"
-                    [class.month-boundary]="isMonthStart(date) && j !== 0"
-                  ></td>
-                }
+              @for (date of dateRange; track date; let j = $index) {
+                <td
+                  class="day"
+                  (mousedown)="onCellMouseDown($event, i, j)"
+                  (mouseenter)="onColumnMouseEnter(j)"
+                  (mouseleave)="onColumnMouseLeave()"
+                  [class.column-hover]="hoveredColIdx === j"
+                  [class.focused]="isFocusedCell(i, j)"
+                  [class.month-boundary]="isMonthStart(date) && j !== 0"
+                ></td>
               }
-            </tr>
+            }
+          </tr>
         }
       </tbody>
     </table>
-      <div class="memo-layer">
-        @for (memo of memos; track memo.id) {
-          <app-memo
-            [memo]="memo"
-            [editing]="editingMemoId === memo.id"
-            (memoMouseDown)="onMemoMouseDown($event, memo)"
-            (memoMouseUp)="onMemoMouseUp($event, memo)"
-            (memoResizeMouseDown)="onMemoResizeMouseDown($event, memo)"
-            (memoBlur)="onMemoBlur($event, memo)"
-            (editToggle)="toggleEdit(memo, $event.el, $event.event)"
-          ></app-memo>
-        }
-      </div>
+    <div class="memo-layer">
+      @for (memo of memos; track memo.id) {
+        <app-memo
+          [memo]="memo"
+          [editing]="editingMemoId === memo.id"
+          (memoMouseDown)="onMemoMouseDown($event, memo)"
+          (memoMouseUp)="onMemoMouseUp($event, memo)"
+          (memoResizeMouseDown)="onMemoResizeMouseDown($event, memo)"
+          (memoBlur)="onMemoBlur($event, memo)"
+          (editToggle)="toggleEdit(memo, $event.el, $event.event)"
+        ></app-memo>
+      }
+    </div>
+    <div class="h-scrollbar-mask"></div>
   </div>
 </div>
