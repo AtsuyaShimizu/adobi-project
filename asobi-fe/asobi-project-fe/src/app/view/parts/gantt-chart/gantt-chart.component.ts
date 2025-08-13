@@ -213,6 +213,7 @@ export class GanttChartComponent
       const stickyWidth = this.getStickyWidth();
       if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
       this.updateScrollbarThumb();
+      this.syncHeader();
     });
   }
 
@@ -221,10 +222,9 @@ export class GanttChartComponent
   }
 
   private onHostScroll = (): void => {
+    this.syncHeader();
     const host = this.scrollHost?.nativeElement;
-    const header = this.headerHost?.nativeElement;
     if (!host) return;
-    if (header) header.scrollLeft = host.scrollLeft;
     this.updateScrollbarThumb();
     const stickyWidth = this.getStickyWidth();
     const scrollLeft = host.scrollLeft;
@@ -244,6 +244,14 @@ export class GanttChartComponent
       this.extendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
     }
   };
+
+  private syncHeader(): void {
+    const host = this.scrollHost?.nativeElement;
+    const header = this.headerHost?.nativeElement;
+    if (!host || !header) return;
+    header.scrollLeft = host.scrollLeft;
+    header.style.width = `${host.clientWidth}px`;
+  }
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
     const host = this.scrollHost?.nativeElement;
