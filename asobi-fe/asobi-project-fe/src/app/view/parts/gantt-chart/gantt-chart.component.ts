@@ -25,13 +25,15 @@ import { MemoComponent } from '../memo/memo.component';
   templateUrl: './gantt-chart.component.html',
   styleUrl: './gantt-chart.component.scss',
 })
-export class GanttChartComponent implements AfterViewInit, OnChanges{
+export class GanttChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input({ required: true }) tasks: Task[] = [];
   @Input({ required: true }) memos: Memo[] = [];
   @Output() memoChange = new EventEmitter<Memo>();
   @Output() taskClick = new EventEmitter<Task>();
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
   @ViewChild('headerHost') private headerHost?: ElementRef<HTMLDivElement>;
+  @ViewChild('hScrollbar') private hScrollbar?: ElementRef<HTMLDivElement>;
+  @ViewChild('hScrollbarInner') private hScrollbarInner?: ElementRef<HTMLDivElement>;
 
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
@@ -139,7 +141,17 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
     this.scrollToToday();
     const host = this.scrollHost?.nativeElement;
     if (host) host.addEventListener('scroll', this.onHostScroll);
+    const bar = this.hScrollbar?.nativeElement;
+    if (bar) bar.addEventListener('scroll', this.onHScroll);
+    this.updateScrollbarWidth();
     this.onHostScroll();
+  }
+
+  ngOnDestroy(): void {
+    const host = this.scrollHost?.nativeElement;
+    if (host) host.removeEventListener('scroll', this.onHostScroll);
+    const bar = this.hScrollbar?.nativeElement;
+    if (bar) bar.removeEventListener('scroll', this.onHScroll);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -165,12 +177,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
     requestAnimationFrame(() => {
       const header = this.headerHost?.nativeElement;
       const th = header?.querySelector<HTMLElement>(`.head-2 th[data-idx="${idx}"]`);
-      const stickyCols = header?.querySelectorAll<HTMLElement>(
-        '.head-1 .sticky-left'
-      );
-      const stickyWidth = stickyCols
-        ? Array.from(stickyCols).reduce((sum, el) => sum + el.offsetWidth, 0)
-        : 0;
+      const stickyWidth = this.getStickyWidth();
       if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
     });
   }
@@ -182,8 +189,10 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
   private onHostScroll = (): void => {
     const host = this.scrollHost?.nativeElement;
     const header = this.headerHost?.nativeElement;
+    const bar = this.hScrollbar?.nativeElement;
     if (!host) return;
     if (header) header.scrollLeft = host.scrollLeft;
+    if (bar) bar.scrollLeft = host.scrollLeft;
 
     if (host.scrollLeft + host.clientWidth >= host.scrollWidth - 100) {
       this.extendRight(GanttChartComponent.EXTEND_DAYS);
@@ -192,6 +201,15 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
       this.extendLeft(GanttChartComponent.EXTEND_DAYS);
       host.scrollLeft += host.scrollWidth - prevWidth;
     }
+  };
+
+  private onHScroll = (): void => {
+    const host = this.scrollHost?.nativeElement;
+    const header = this.headerHost?.nativeElement;
+    const bar = this.hScrollbar?.nativeElement;
+    if (!host || !bar) return;
+    host.scrollLeft = bar.scrollLeft;
+    if (header) header.scrollLeft = bar.scrollLeft;
   };
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
@@ -415,6 +433,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
     }
     this.rangeEnd = this.addDays(this.rangeEnd, days);
     this.cdr.markForCheck();
+    this.updateScrollbarWidth();
   }
 
   private extendLeft(days: number): void {
@@ -425,6 +444,7 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
     this.dateRange = [...newDates, ...this.dateRange];
     this.rangeStart = this.addDays(this.rangeStart, -days);
     this.cdr.markForCheck();
+    this.updateScrollbarWidth();
   }
 
   private ensureTaskRange(): void {
@@ -433,5 +453,13 @@ export class GanttChartComponent implements AfterViewInit, OnChanges{
     const taskEnd = new Date(Math.max(...this.tasks.map((t) => t.end.getTime())));
     if (taskStart < this.rangeStart) this.extendLeft(this.diffDays(taskStart, this.rangeStart));
     if (taskEnd > this.rangeEnd) this.extendRight(this.diffDays(this.rangeEnd, taskEnd));
+  }
+
+  private updateScrollbarWidth(): void {
+    const host = this.scrollHost?.nativeElement;
+    const inner = this.hScrollbarInner?.nativeElement;
+    if (!host || !inner) return;
+    const stickyWidth = this.getStickyWidth();
+    inner.style.width = `${host.scrollWidth - stickyWidth}px`;
   }
 }
