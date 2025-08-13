@@ -14,6 +14,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
 import { MemoComponent } from '../memo/memo.component';
@@ -25,10 +26,18 @@ interface TaskView {
   progressEnd: Date;
 }
 
+interface FilterState {
+  options: string[];
+  keyword: string;
+  selected: Set<string>;
+}
+
+type FilterName = 'type' | 'name' | 'assignee';
+
 @Component({
   selector: 'app-gantt-chart',
   standalone: true,
-  imports: [DatePipe, MemoComponent],
+  imports: [DatePipe, MemoComponent, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './gantt-chart.component.html',
   styleUrl: './gantt-chart.component.scss',
@@ -50,6 +59,12 @@ export class GanttChartComponent
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
   protected taskViews: TaskView[] = [];
+  protected filterPopup: FilterName | null = null;
+  protected filters: Record<FilterName, FilterState> = {
+    type: { options: [], keyword: '', selected: new Set<string>() },
+    name: { options: [], keyword: '', selected: new Set<string>() },
+    assignee: { options: [], keyword: '', selected: new Set<string>() },
+  };
   private rangeStart: Date;
   private rangeEnd: Date;
   private static readonly INITIAL_MONTHS = 6;
@@ -180,16 +195,63 @@ export class GanttChartComponent
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['tasks']) {
-      this.taskViews = this.tasks.map((t) => {
-        const start = this.toStartOfDay(t.start);
-        const end = this.toStartOfDay(t.end);
-        const total = this.diffDays(start, end) + 1;
-        const progressDays = Math.round(total * (t.progress / 100));
-        const progressEnd = this.addDays(start, progressDays - 1);
-        return { task: t, start, end, progressEnd };
-      });
+      this.buildFilters();
+      this.updateTaskViews();
       this.scrollToToday();
     }
+  }
+
+  private buildFilters(): void {
+    const typeSet = new Set(this.tasks.map((t) => t.type));
+    const nameSet = new Set(this.tasks.map((t) => t.name));
+    const assigneeSet = new Set(this.tasks.map((t) => t.assignee));
+    this.filters.type.options = Array.from(typeSet);
+    this.filters.name.options = Array.from(nameSet);
+    this.filters.assignee.options = Array.from(assigneeSet);
+    this.filters.type.selected = new Set(this.filters.type.options);
+    this.filters.name.selected = new Set(this.filters.name.options);
+    this.filters.assignee.selected = new Set(this.filters.assignee.options);
+    this.filters.type.keyword = '';
+    this.filters.name.keyword = '';
+    this.filters.assignee.keyword = '';
+  }
+
+  private updateTaskViews(): void {
+    const filtered = this.tasks.filter(
+      (t) =>
+        this.filters.type.selected.has(t.type) &&
+        this.filters.name.selected.has(t.name) &&
+        this.filters.assignee.selected.has(t.assignee),
+    );
+    this.taskViews = filtered.map((t) => {
+      const start = this.toStartOfDay(t.start);
+      const end = this.toStartOfDay(t.end);
+      const total = this.diffDays(start, end) + 1;
+      const progressDays = Math.round(total * (t.progress / 100));
+      const progressEnd = this.addDays(start, progressDays - 1);
+      return { task: t, start, end, progressEnd };
+    });
+  }
+
+  toggleFilterPopup(name: FilterName, event: MouseEvent): void {
+    event.stopPropagation();
+    this.filterPopup = this.filterPopup === name ? null : name;
+  }
+
+  closeFilterPopup(): void {
+    this.filterPopup = null;
+  }
+
+  onFilterChange(name: FilterName, option: string, checked: boolean): void {
+    const selected = this.filters[name].selected;
+    if (checked) selected.add(option);
+    else selected.delete(option);
+    this.updateTaskViews();
+  }
+
+  getFilteredOptions(name: FilterName): string[] {
+    const { options, keyword } = this.filters[name];
+    return options.filter((o) => o.startsWith(keyword));
   }
 
   public scrollToDate(date: Date): void {
