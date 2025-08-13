@@ -46,18 +46,18 @@
     <table class="gantt-table">
       <tbody>
         @for (row of emptyRows; track $index; let i = $index) {
-          @if (tasks[i]; as task) {
-            <tr (click)="onRowClick(task)">
-              <td class="sticky-left col-type">{{ task.type }}</td>
-              <td class="sticky-left col-name">{{ task.name }}</td>
-              <td class="sticky-left col-assignee">{{ task.assignee }}</td>
+          @if (taskViews[i]; as view) {
+            <tr (click)="onRowClick(view)">
+              <td class="sticky-left col-type">{{ view.task.type }}</td>
+              <td class="sticky-left col-name">{{ view.task.name }}</td>
+              <td class="sticky-left col-assignee">{{ view.task.assignee }}</td>
               <td class="sticky-left col-start">
-                {{ task.start | date: "yyyy-MM-dd" }}
+                {{ view.task.start | date: "yyyy-MM-dd" }}
               </td>
               <td class="sticky-left col-end">
-                {{ task.end | date: "yyyy-MM-dd" }}
+                {{ view.task.end | date: "yyyy-MM-dd" }}
               </td>
-              <td class="sticky-left col-progress">{{ task.progress }}%</td>
+              <td class="sticky-left col-progress">{{ view.task.progress }}%</td>
 
               @for (date of dateRange; track date; let j = $index) {
                 <td
@@ -67,12 +67,12 @@
                   (mouseleave)="onColumnMouseLeave()"
                   [class.column-hover]="hoveredColIdx === j"
                   [class.focused]="isFocusedCell(i, j)"
-                  [class.progress]="isProgress(task, date)"
-                  [class.planned]="isPlanned(task, date)"
-                  [class.progress-start]="isProgressStart(task, date)"
-                  [class.progress-end]="isProgressEnd(task, date)"
-                  [class.planned-start]="isPlannedStart(task, date)"
-                  [class.planned-end]="isPlannedEnd(task, date)"
+                  [class.progress]="isProgress(view, date)"
+                  [class.planned]="isPlanned(view, date)"
+                  [class.progress-start]="isProgressStart(view, date)"
+                  [class.progress-end]="isProgressEnd(view, date)"
+                  [class.planned-start]="isPlannedStart(view, date)"
+                  [class.planned-end]="isPlannedEnd(view, date)"
                   [class.month-boundary]="isMonthStart(date) && j !== 0"
                 ></td>
               }

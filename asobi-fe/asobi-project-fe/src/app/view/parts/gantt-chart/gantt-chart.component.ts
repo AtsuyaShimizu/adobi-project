@@ -17,6 +17,13 @@ import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
 import { MemoComponent } from '../memo/memo.component';
 
+interface TaskView {
+  task: Task;
+  start: Date;
+  end: Date;
+  progressEnd: Date;
+}
+
 @Component({
   selector: 'app-gantt-chart',
   standalone: true,
@@ -40,6 +47,7 @@ export class GanttChartComponent
 
   protected readonly emptyRows = Array.from({ length: 100 });
   protected dateRange: Date[] = [];
+  protected taskViews: TaskView[] = [];
   private rangeStart: Date;
   private rangeEnd: Date;
   private static readonly INITIAL_RANGE_DAYS = 90;
@@ -105,50 +113,40 @@ export class GanttChartComponent
     return result;
   }
 
-  isProgress(task: Task, date: Date): boolean {
-    const start = this.toStartOfDay(task.start);
-    const end = this.toStartOfDay(task.end);
-    if (date < start || date > end) return false;
-    const total = this.diffDays(start, end) + 1;
-    const progressDays = Math.round(total * (task.progress / 100));
-    const progressEnd = this.addDays(start, progressDays - 1);
-    return date <= progressEnd;
+  isProgress(view: TaskView, date: Date): boolean {
+    if (date < view.start || date > view.end) return false;
+    return date <= view.progressEnd;
   }
 
-  isPlanned(task: Task, date: Date): boolean {
-    const start = this.toStartOfDay(task.start);
-    const end = this.toStartOfDay(task.end);
-    if (date < start || date > end) return false;
-    const total = this.diffDays(start, end) + 1;
-    const progressDays = Math.round(total * (task.progress / 100));
-    const progressEnd = this.addDays(start, progressDays - 1);
-    return date > progressEnd && date <= end;
+  isPlanned(view: TaskView, date: Date): boolean {
+    if (date < view.start || date > view.end) return false;
+    return date > view.progressEnd && date <= view.end;
   }
 
-  isProgressStart(task: Task, date: Date): boolean {
+  isProgressStart(view: TaskView, date: Date): boolean {
     return (
-      this.isProgress(task, date) &&
-      !this.isProgress(task, this.addDays(date, -1))
+      this.isProgress(view, date) &&
+      !this.isProgress(view, this.addDays(date, -1))
     );
   }
 
-  isProgressEnd(task: Task, date: Date): boolean {
+  isProgressEnd(view: TaskView, date: Date): boolean {
     return (
-      this.isProgress(task, date) &&
-      !this.isProgress(task, this.addDays(date, 1))
+      this.isProgress(view, date) &&
+      !this.isProgress(view, this.addDays(date, 1))
     );
   }
 
-  isPlannedStart(task: Task, date: Date): boolean {
+  isPlannedStart(view: TaskView, date: Date): boolean {
     return (
-      this.isPlanned(task, date) &&
-      !this.isPlanned(task, this.addDays(date, -1))
+      this.isPlanned(view, date) &&
+      !this.isPlanned(view, this.addDays(date, -1))
     );
   }
 
-  isPlannedEnd(task: Task, date: Date): boolean {
+  isPlannedEnd(view: TaskView, date: Date): boolean {
     return (
-      this.isPlanned(task, date) && !this.isPlanned(task, this.addDays(date, 1))
+      this.isPlanned(view, date) && !this.isPlanned(view, this.addDays(date, 1))
     );
   }
 
@@ -186,6 +184,14 @@ export class GanttChartComponent
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['tasks']) {
+      this.taskViews = this.tasks.map((t) => {
+        const start = this.toStartOfDay(t.start);
+        const end = this.toStartOfDay(t.end);
+        const total = this.diffDays(start, end) + 1;
+        const progressDays = Math.round(total * (t.progress / 100));
+        const progressEnd = this.addDays(start, progressDays - 1);
+        return { task: t, start, end, progressEnd };
+      });
       this.ensureTaskRange();
       this.scrollToToday();
     }
@@ -311,10 +317,12 @@ export class GanttChartComponent
   }
 
   onColumnMouseEnter(colIdx: number): void {
+    if (this.hoveredColIdx === colIdx) return;
     this.hoveredColIdx = colIdx;
   }
 
   onColumnMouseLeave(): void {
+    if (this.hoveredColIdx === null) return;
     this.hoveredColIdx = null;
   }
 
@@ -429,8 +437,8 @@ export class GanttChartComponent
     return el.querySelector<HTMLElement>('.memo-body')?.innerText ?? '';
   }
 
-  onRowClick(task: Task): void {
-    this.taskClick.emit(task);
+  onRowClick(view: TaskView): void {
+    this.taskClick.emit(view.task);
   }
 
   private getStickyWidth(): number {
@@ -506,12 +514,12 @@ export class GanttChartComponent
   }
 
   private ensureTaskRange(): void {
-    if (this.tasks.length === 0) return;
+    if (this.taskViews.length === 0) return;
     const taskStart = new Date(
-      Math.min(...this.tasks.map((t) => t.start.getTime())),
+      Math.min(...this.taskViews.map((v) => v.start.getTime())),
     );
     const taskEnd = new Date(
-      Math.max(...this.tasks.map((t) => t.end.getTime())),
+      Math.max(...this.taskViews.map((v) => v.end.getTime())),
     );
     if (taskStart < this.rangeStart)
       this.extendLeft(this.diffDays(taskStart, this.rangeStart));
