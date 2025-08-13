@@ -7,10 +7,11 @@ import {
   EventEmitter,
   Input,
   OnChanges,
-  SimpleChanges,
-  Output,
-  ViewChild,
+  OnInit,
   OnDestroy,
+  Output,
+  SimpleChanges,
+  ViewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Task } from '../../../domain/model/task';
@@ -33,12 +34,13 @@ interface TaskView {
   styleUrl: './gantt-chart.component.scss',
 })
 export class GanttChartComponent
-  implements AfterViewInit, OnChanges, OnDestroy
+  implements AfterViewInit, OnChanges, OnDestroy, OnInit
 {
   @Input({ required: true }) tasks: Task[] = [];
   @Input({ required: true }) memos: Memo[] = [];
   @Output() memoChange = new EventEmitter<Memo>();
   @Output() taskClick = new EventEmitter<Task>();
+  @Output() rangeChange = new EventEmitter<{ start: Date; end: Date }>();
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
   @ViewChild('headerHost') private headerHost?: ElementRef<HTMLDivElement>;
   @ViewChild('hScrollbar') private hScrollbar?: ElementRef<HTMLDivElement>;
@@ -50,13 +52,11 @@ export class GanttChartComponent
   protected taskViews: TaskView[] = [];
   private rangeStart: Date;
   private rangeEnd: Date;
-  private static readonly INITIAL_RANGE_DAYS = 90;
-  private static readonly EXTEND_DAYS = 30;
+  private static readonly INITIAL_MONTHS = 3;
+  private static readonly EXTEND_MONTHS = 2;
   private static readonly EXTEND_THRESHOLD_DAYS = 30;
   private static readonly CELL_WIDTH = 36;
   private barDrag?: { startX: number; startScroll: number };
-  private wheelDelta = 0;
-  private wheelFrame = false;
   private dragData?: {
     memo: Memo;
     el: HTMLElement;
@@ -96,12 +96,16 @@ export class GanttChartComponent
 
   constructor(private cdr: ChangeDetectorRef) {
     const start = this.getToday();
-    this.rangeStart = this.addDays(
+    this.rangeStart = this.addMonths(
       start,
-      -GanttChartComponent.INITIAL_RANGE_DAYS,
+      -GanttChartComponent.INITIAL_MONTHS,
     );
-    this.rangeEnd = this.addDays(start, GanttChartComponent.INITIAL_RANGE_DAYS);
+    this.rangeEnd = this.addMonths(start, GanttChartComponent.INITIAL_MONTHS);
     this.buildDateRange();
+  }
+
+  ngOnInit(): void {
+    this.emitRangeChange();
   }
 
   get months(): { label: string; days: number; month: number }[] {
@@ -162,14 +166,6 @@ export class GanttChartComponent
     const host = this.scrollHost?.nativeElement;
     if (host) {
       host.addEventListener('scroll', this.onHostScroll);
-      host.addEventListener('wheel', this.onWheel, { passive: false });
-    }
-    const header = this.headerHost?.nativeElement;
-    if (header)
-      header.addEventListener('wheel', this.onWheel, { passive: false });
-    const bar = this.hScrollbar?.nativeElement;
-    if (bar) {
-      bar.addEventListener('wheel', this.onWheel, { passive: false });
     }
     this.updateScrollbarThumb();
     this.onHostScroll();
@@ -179,13 +175,6 @@ export class GanttChartComponent
     const host = this.scrollHost?.nativeElement;
     if (host) {
       host.removeEventListener('scroll', this.onHostScroll);
-      host.removeEventListener('wheel', this.onWheel);
-    }
-    const header = this.headerHost?.nativeElement;
-    if (header) header.removeEventListener('wheel', this.onWheel);
-    const bar = this.hScrollbar?.nativeElement;
-    if (bar) {
-      bar.removeEventListener('wheel', this.onWheel);
     }
   }
 
@@ -199,7 +188,6 @@ export class GanttChartComponent
         const progressEnd = this.addDays(start, progressDays - 1);
         return { task: t, start, end, progressEnd };
       });
-      this.ensureTaskRange();
       this.scrollToToday();
     }
   }
@@ -210,9 +198,9 @@ export class GanttChartComponent
 
     const target = this.toStartOfDay(date);
     while (target < this.rangeStart)
-      this.extendLeft(GanttChartComponent.EXTEND_DAYS);
+      this.extendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
     while (target > this.rangeEnd)
-      this.extendRight(GanttChartComponent.EXTEND_DAYS);
+      this.extendRightMonths(GanttChartComponent.EXTEND_MONTHS);
 
     const idx = this.dateRange.findIndex((d) => this.isSameDay(d, target));
     if (idx < 0) return;
@@ -239,7 +227,7 @@ export class GanttChartComponent
     if (header) header.scrollLeft = host.scrollLeft;
     this.updateScrollbarThumb();
     const stickyWidth = this.getStickyWidth();
-    const scrollLeft = Math.max(host.scrollLeft - stickyWidth, 0);
+    const scrollLeft = host.scrollLeft;
     const firstVisibleIdx = Math.floor(
       scrollLeft / GanttChartComponent.CELL_WIDTH,
     );
@@ -251,31 +239,9 @@ export class GanttChartComponent
       firstVisibleIdx + visibleCols >
       this.dateRange.length - GanttChartComponent.EXTEND_THRESHOLD_DAYS
     ) {
-      this.extendRight(GanttChartComponent.EXTEND_DAYS);
+      this.extendRightMonths(GanttChartComponent.EXTEND_MONTHS);
     } else if (firstVisibleIdx < GanttChartComponent.EXTEND_THRESHOLD_DAYS) {
-      const prevWidth = host.scrollWidth;
-      this.extendLeft(GanttChartComponent.EXTEND_DAYS);
-      host.scrollLeft += host.scrollWidth - prevWidth;
-    }
-  };
-
-  private onWheel = (event: WheelEvent): void => {
-    const host = this.scrollHost?.nativeElement;
-    if (!host) return;
-    const delta =
-      event.deltaX !== 0 ? event.deltaX : event.shiftKey ? event.deltaY : 0;
-    if (delta !== 0) {
-      event.preventDefault();
-      event.stopPropagation();
-      this.wheelDelta += delta;
-      if (!this.wheelFrame) {
-        this.wheelFrame = true;
-        requestAnimationFrame(() => {
-          host.scrollLeft += this.wheelDelta;
-          this.wheelDelta = 0;
-          this.wheelFrame = false;
-        });
-      }
+      this.extendLeftMonths(GanttChartComponent.EXTEND_MONTHS);
     }
   };
 
@@ -475,6 +441,11 @@ export class GanttChartComponent
     today.setHours(0, 0, 0, 0);
     return today;
   }
+  private addMonths(date: Date, months: number): Date {
+    const result = new Date(date);
+    result.setMonth(result.getMonth() + months);
+    return result;
+  }
   private toStartOfDay(date: Date): Date {
     const result = new Date(date);
     result.setHours(0, 0, 0, 0);
@@ -500,38 +471,34 @@ export class GanttChartComponent
     this.dateRange = dates;
   }
 
-  private extendRight(days: number): void {
-    for (let i = 1; i <= days; i++) {
-      this.dateRange.push(this.addDays(this.rangeEnd, i));
-    }
-    this.rangeEnd = this.addDays(this.rangeEnd, days);
+  private extendRightMonths(months: number): void {
+    const host = this.scrollHost?.nativeElement;
+    const prevStart = new Date(this.rangeStart);
+    this.rangeEnd = this.addMonths(this.rangeEnd, months);
+    this.rangeStart = this.addMonths(this.rangeStart, months);
+    this.buildDateRange();
+    this.emitRangeChange();
     this.cdr.markForCheck();
+    if (host) {
+      const removedDays = this.diffDays(prevStart, this.rangeStart);
+      host.scrollLeft -= removedDays * GanttChartComponent.CELL_WIDTH;
+    }
     this.updateScrollbarThumb();
   }
 
-  private extendLeft(days: number): void {
-    const newDates: Date[] = [];
-    for (let i = days; i >= 1; i--) {
-      newDates.push(this.addDays(this.rangeStart, -i));
-    }
-    this.dateRange = [...newDates, ...this.dateRange];
-    this.rangeStart = this.addDays(this.rangeStart, -days);
+  private extendLeftMonths(months: number): void {
+    const host = this.scrollHost?.nativeElement;
+    const prevStart = new Date(this.rangeStart);
+    this.rangeStart = this.addMonths(this.rangeStart, -months);
+    this.rangeEnd = this.addMonths(this.rangeEnd, -months);
+    this.buildDateRange();
+    this.emitRangeChange();
     this.cdr.markForCheck();
+    if (host) {
+      const addedDays = this.diffDays(this.rangeStart, prevStart);
+      host.scrollLeft += addedDays * GanttChartComponent.CELL_WIDTH;
+    }
     this.updateScrollbarThumb();
-  }
-
-  private ensureTaskRange(): void {
-    if (this.taskViews.length === 0) return;
-    const taskStart = new Date(
-      Math.min(...this.taskViews.map((v) => v.start.getTime())),
-    );
-    const taskEnd = new Date(
-      Math.max(...this.taskViews.map((v) => v.end.getTime())),
-    );
-    if (taskStart < this.rangeStart)
-      this.extendLeft(this.diffDays(taskStart, this.rangeStart));
-    if (taskEnd > this.rangeEnd)
-      this.extendRight(this.diffDays(this.rangeEnd, taskEnd));
   }
 
   onScrollbarMouseDown(event: MouseEvent): void {
@@ -583,12 +550,10 @@ export class GanttChartComponent
     const bar = this.hScrollbar?.nativeElement;
     const thumb = this.hScrollbarThumb?.nativeElement;
     if (!host || !bar || !thumb) return 0;
-    const stickyWidth = this.getStickyWidth();
-    const visible = host.clientWidth - stickyWidth;
-    const total = host.scrollWidth - stickyWidth;
     const track = bar.clientWidth - thumb.clientWidth;
+    const maxScroll = host.scrollWidth - host.clientWidth;
     const ratio = track === 0 ? 0 : pos / track;
-    return stickyWidth + (total - visible) * ratio;
+    return maxScroll * ratio;
   }
 
   private updateScrollbarThumb(): void {
@@ -602,10 +567,17 @@ export class GanttChartComponent
     const barWidth = bar.clientWidth;
     const thumbWidth = total === 0 ? barWidth : (visible / total) * barWidth;
     thumb.style.width = `${thumbWidth}px`;
-    const maxScroll = total - visible;
-    const scrollLeft = Math.max(host.scrollLeft - stickyWidth, 0);
+    const maxScroll = host.scrollWidth - host.clientWidth;
     const track = barWidth - thumbWidth;
-    const pos = maxScroll === 0 ? 0 : (scrollLeft / maxScroll) * track;
+    const pos =
+      maxScroll === 0 ? 0 : (host.scrollLeft / maxScroll) * track;
     thumb.style.transform = `translateX(${pos}px)`;
+  }
+
+  private emitRangeChange(): void {
+    this.rangeChange.emit({
+      start: new Date(this.rangeStart),
+      end: new Date(this.rangeEnd),
+    });
   }
 }
