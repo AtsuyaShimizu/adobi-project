@@ -28,6 +28,11 @@ import {
 import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
 import { MemoComponent } from '../memo/memo.component';
+import {
+  ScrollAnchor,
+  captureAnchor,
+  restoreFromAnchor,
+} from './gantt-scroll-anchor.util';
 
 interface TaskView {
   task: Task;
@@ -322,7 +327,7 @@ export class GanttChartComponent
     public scrollToToday(): void {
       this.scrollToDate(this.getToday());
     }
-
+  
     private handleScrollRaf(): void {
       const host = this.scrollHost?.nativeElement;
       if (!host) return;
@@ -350,6 +355,7 @@ export class GanttChartComponent
       )
         this.needsPrune = true;
     }
+  }
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
     const host = this.scrollHost?.nativeElement;
@@ -558,6 +564,9 @@ export class GanttChartComponent
     result.setDate(result.getDate() + days);
     return result;
   }
+  private getDateKey(date: Date): string {
+    return date.toISOString().slice(0, 10);
+  }
   private getToday(): Date {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -602,6 +611,7 @@ export class GanttChartComponent
   }
 
   private extendRightDays(days: number): void {
+    // TODO: Infinite Scroll Smoothness - Range extension
     this.rangeEnd = this.addDays(this.rangeEnd, days);
     this.buildDateRange();
     this.emitRangeChange();
