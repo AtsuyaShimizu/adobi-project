@@ -135,17 +135,23 @@
       <tbody>
         @for (row of emptyRows; track $index; let i = $index) {
           @if (taskViews[i]; as view) {
-            <tr (click)="onRowClick(view)">
-              <td class="sticky-left col-type">{{ view.task.type }}</td>
-              <td class="sticky-left col-name">{{ view.task.name }}</td>
-              <td class="sticky-left col-assignee">{{ view.task.assignee }}</td>
-              <td class="sticky-left col-start">
+            <tr>
+              <td class="sticky-left col-type" (click)="onRowClick(view)">
+                {{ view.task.type }}
+              </td>
+              <td class="sticky-left col-name" (click)="onRowClick(view)">
+                {{ view.task.name }}
+              </td>
+              <td class="sticky-left col-assignee" (click)="onRowClick(view)">
+                {{ view.task.assignee }}
+              </td>
+              <td class="sticky-left col-start" (click)="onRowClick(view)">
                 {{ view.task.start | date: "yyyy-MM-dd" }}
               </td>
-              <td class="sticky-left col-end">
+              <td class="sticky-left col-end" (click)="onRowClick(view)">
                 {{ view.task.end | date: "yyyy-MM-dd" }}
               </td>
-              <td class="sticky-left col-progress">
+              <td class="sticky-left col-progress" (click)="onRowClick(view)">
                 {{ view.task.progress }}%
               </td>
 
@@ -155,6 +161,7 @@
                   (mousedown)="onCellMouseDown($event, i, j)"
                   (mouseenter)="onColumnMouseEnter(j)"
                   (mouseleave)="onColumnMouseLeave()"
+                  (click)="startProgressEdit(view.task, i, j)"
                   [class.column-hover]="hoveredColIdx === j"
                   [class.focused]="isFocusedCell(i, j)"
                   [class.progress]="isProgress(view, date)"
@@ -164,7 +171,18 @@
                   [class.planned-start]="isPlannedStart(view, date)"
                   [class.planned-end]="isPlannedEnd(view, date)"
                   [class.month-boundary]="isMonthStart(date) && j !== 0"
-                ></td>
+                >
+                  @if (isEditingCell(i, j)) {
+                    <input
+                      type="number"
+                      class="progress-input"
+                      [(ngModel)]="progressValue"
+                      (keyup.enter)="commitProgress()"
+                      (blur)="commitProgress()"
+                      autofocus
+                    />
+                  }
+                </td>
               }
             </tr>
           } @else {

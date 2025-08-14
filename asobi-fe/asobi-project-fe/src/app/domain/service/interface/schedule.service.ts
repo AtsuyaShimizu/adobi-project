@@ -7,4 +7,5 @@ export interface ScheduleServiceInterface {
   add(task: Task): Promise<void>;
   update(task: Task): Promise<void>;
   remove(id: string): Promise<void>;
+  addProgress(id: string, value: number): Promise<void>;
 }

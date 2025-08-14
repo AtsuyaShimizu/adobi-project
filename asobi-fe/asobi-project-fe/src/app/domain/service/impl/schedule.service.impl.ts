@@ -29,4 +29,13 @@ export class ScheduleService implements ScheduleServiceInterface {
     await this.#repository.delete(id);
     this.#state.remove(id);
   }
+
+  async addProgress(id: string, value: number): Promise<void> {
+    const task = this.#state.tasks().find(t => t.id === id);
+    if (!task) return;
+    const progress = Math.min(task.progress + value, 100);
+    const updated: Task = { ...task, progress };
+    await this.#repository.update(updated);
+    this.#state.update(updated);
+  }
 }
