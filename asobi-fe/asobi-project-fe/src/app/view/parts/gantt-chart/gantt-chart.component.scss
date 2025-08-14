@@ -54,24 +54,41 @@
   display: none;
 }
 
-.h-scrollbar {
+
+.h-scrollbar-wrapper {
   height: var(--scrollbar-h);
-  width: calc(100% - var(--left-cols-width));
-  margin-left: var(--left-cols-width);
-  position: relative;
+  width: 100%;
+  display: flex;
   background: #f3f4f6;
   border-top: 1px solid #e5e7eb;
 }
 
-.h-scrollbar::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  bottom: 0;
-  left: calc(-1 * var(--left-cols-width));
+.left-space {
   width: var(--left-cols-width);
+  height: 100%;
   background: inherit;
-  border-top: 1px solid #e5e7eb;
+}
+
+.span-nav {
+  width: var(--scrollbar-h);
+  height: 100%;
+  background: inherit;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.span-nav img {
+  width: 12px;
+  height: 12px;
+}
+
+.h-scrollbar {
+  flex: 1;
+  position: relative;
+  background: inherit;
 }
 
 .h-scrollbar-thumb {

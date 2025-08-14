@@ -73,10 +73,13 @@ export class GanttChartComponent
     name: { options: [], keyword: '', selected: new Set<string>() },
     assignee: { options: [], keyword: '', selected: new Set<string>() },
   };
-  private rangeStart: Date;
-  private rangeEnd: Date;
-  // 表示範囲の前後に確保する月数
-  private static readonly INITIAL_MONTHS = 12;
+  private rangeStart!: Date;
+  private rangeEnd!: Date;
+  private spanOffset = 0;
+  private static readonly PAST_MONTHS = 6;
+  private static readonly FUTURE_MONTHS = 12;
+  private static readonly SPAN_MONTHS =
+    GanttChartComponent.PAST_MONTHS + GanttChartComponent.FUTURE_MONTHS;
   private static readonly CELL_WIDTH = 36;
   private barDrag?: { startX: number; startThumbPos: number };
   private dragData?: {
@@ -106,7 +109,6 @@ export class GanttChartComponent
   protected hoveredColIdx: number | null = null;
   protected editingMemoId: string | null = null;
   private isScrolling = false;
-  private scrollSub?: Subscription;
   private resizeSub?: Subscription;
   private shouldScrollToToday = true;
   // Cached dimensions to reduce layout thrashing during scroll
@@ -146,13 +148,7 @@ export class GanttChartComponent
   ];
 
   constructor(private cdr: ChangeDetectorRef) {
-    const start = this.getToday();
-    this.rangeStart = this.addMonths(
-      start,
-      -GanttChartComponent.INITIAL_MONTHS,
-    );
-    this.rangeEnd = this.addMonths(start, GanttChartComponent.INITIAL_MONTHS);
-    this.buildDateRange();
+    this.updateRange();
   }
 
   ngOnInit(): void {
@@ -217,11 +213,9 @@ export class GanttChartComponent
     this.updateDimensionCaches();
     const host = this.scrollHost?.nativeElement;
     if (host) {
-      // スクロールイベントを購読
-      const scroll$ = fromEvent(host, 'scroll', { passive: true });
-      this.scrollSub = scroll$.subscribe(this.onScrollBound);
-
-      // ホイールによる横スクロール
+      host.addEventListener('scroll', this.onScrollBound, {
+        passive: true,
+      });
       host.addEventListener('wheel', this.onWheel, { passive: false });
     }
     // スクロールバー位置を初期化
@@ -236,12 +230,12 @@ export class GanttChartComponent
   }
 
   ngOnDestroy(): void {
-    this.scrollSub?.unsubscribe();
     this.resizeSub?.unsubscribe();
 
     const host = this.scrollHost?.nativeElement;
     if (host) {
       host.removeEventListener('wheel', this.onWheel);
+      host.removeEventListener('scroll', this.onScrollBound);
     }
   }
 
@@ -249,12 +243,10 @@ export class GanttChartComponent
     if (changes['tasks']) {
       this.buildFilters();
       this.updateTaskViews();
-      this.updateRange();
       if (this.shouldScrollToToday) {
         this.scrollToToday();
         this.shouldScrollToToday = false;
       }
-      // 再計算後に寸法を更新
       this.updateDimensionCaches();
     }
   }
@@ -585,34 +577,27 @@ export class GanttChartComponent
 
   private updateRange(): void {
     const today = this.getToday();
-    if (this.tasks.length === 0) {
-      this.rangeStart = this.addMonths(
-        today,
-        -GanttChartComponent.INITIAL_MONTHS,
-      );
-      this.rangeEnd = this.addMonths(
-        today,
-        GanttChartComponent.INITIAL_MONTHS,
-      );
-    } else {
-      const starts = this.tasks.map((t) => this.toStartOfDay(t.start));
-      const ends = this.tasks.map((t) => this.toStartOfDay(t.end));
-      const minStart = new Date(
-        Math.min(...starts.map((d) => d.getTime())),
-      );
-      const maxEnd = new Date(Math.max(...ends.map((d) => d.getTime())));
-      this.rangeStart = this.addMonths(
-        minStart,
-        -GanttChartComponent.INITIAL_MONTHS,
-      );
-      this.rangeEnd = this.addMonths(
-        maxEnd,
-        GanttChartComponent.INITIAL_MONTHS,
-      );
-    }
+    const baseStart = this.addMonths(
+      today,
+      -GanttChartComponent.PAST_MONTHS,
+    );
+    const baseEnd = this.addMonths(
+      today,
+      GanttChartComponent.FUTURE_MONTHS,
+    );
+    const shift = GanttChartComponent.SPAN_MONTHS * this.spanOffset;
+    this.rangeStart = this.addMonths(baseStart, shift);
+    this.rangeEnd = this.addMonths(baseEnd, shift);
     this.buildDateRange();
     this.emitRangeChange();
     this.cdr.markForCheck();
+  }
+
+  moveSpan(direction: number): void {
+    this.spanOffset += direction;
+    this.updateRange();
+    this.scrollToDate(this.rangeStart);
+    this.updateScrollbarThumb();
   }
 
   private formatDateKey(date: Date): string {
