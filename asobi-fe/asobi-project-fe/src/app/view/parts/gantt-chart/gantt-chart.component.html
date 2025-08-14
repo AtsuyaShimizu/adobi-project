@@ -206,11 +206,20 @@
       }
     </div>
   </div>
-  <div
-    class="h-scrollbar"
-    #hScrollbar
-    (mousedown)="onScrollbarMouseDown($event)"
-  >
-    <div class="h-scrollbar-thumb" #hScrollbarThumb></div>
+  <div class="h-scrollbar-wrapper">
+    <div class="left-space"></div>
+    <button class="span-nav prev" (click)="moveSpan(-1)">
+      <img src="arrow-left.svg" alt="前の期間" />
+    </button>
+    <div
+      class="h-scrollbar"
+      #hScrollbar
+      (mousedown)="onScrollbarMouseDown($event)"
+    >
+      <div class="h-scrollbar-thumb" #hScrollbarThumb></div>
+    </div>
+    <button class="span-nav next" (click)="moveSpan(1)">
+      <img src="arrow-right.svg" alt="次の期間" />
+    </button>
   </div>
 </div>
