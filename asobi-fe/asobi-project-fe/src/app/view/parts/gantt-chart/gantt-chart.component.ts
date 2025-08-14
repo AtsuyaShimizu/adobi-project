@@ -114,12 +114,12 @@ export class GanttChartComponent
   // Cached dimensions to reduce layout thrashing during scroll
   private stickyWidthCache = 0;
   private headerHeightCache = 0;
-  // Wheel event handler for horizontal scrolling using mouse wheel
+  // Wheel event handler: Shift+スクロール時のみ横方向へ変換し、それ以外は標準の縦スクロールを許可
   private onWheel = (event: WheelEvent) => {
     const host = this.scrollHost?.nativeElement;
     if (!host) return;
-    // Convert vertical scrolling to horizontal when vertical delta is larger than horizontal
-    if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+    // Shift キーが押されている場合のみ、縦スクロール量を横スクロールに加算
+    if (event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
       host.scrollLeft += event.deltaY;
       event.preventDefault();
     }
