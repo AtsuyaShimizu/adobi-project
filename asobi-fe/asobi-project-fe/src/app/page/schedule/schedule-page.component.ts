@@ -104,4 +104,8 @@ export class SchedulePageComponent implements OnInit {
     this.#scheduleService.remove(id);
     this.closeTaskDetail();
   }
+
+  onProgressInput(event: { task: Task; value: number }): void {
+    this.#scheduleService.addProgress(event.task.id, event.value);
+  }
 }

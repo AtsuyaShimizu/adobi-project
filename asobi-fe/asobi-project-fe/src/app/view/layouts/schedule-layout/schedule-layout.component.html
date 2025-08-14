@@ -21,6 +21,7 @@
       [memos]="memos"
       (memoChange)="memoChange.emit($event)"
       (taskClick)="openTaskDetail.emit($event)"
+      (progressInput)="progressInput.emit($event)"
     ></app-gantt-chart>
     @if (calendarVisible) {
       <app-calendar-modal

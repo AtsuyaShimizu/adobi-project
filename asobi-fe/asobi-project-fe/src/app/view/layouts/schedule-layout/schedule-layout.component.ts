@@ -57,6 +57,7 @@ export class ScheduleLayoutComponent {
   @Output() closeTaskDetail = new EventEmitter<void>();
   @Output() editTask = new EventEmitter<Task>();
   @Output() deleteTask = new EventEmitter<string>();
+  @Output() progressInput = new EventEmitter<{ task: Task; value: number }>();
 
   onCalendarConfirm(date: Date): void {
     this.ganttChart?.scrollToDate(date);

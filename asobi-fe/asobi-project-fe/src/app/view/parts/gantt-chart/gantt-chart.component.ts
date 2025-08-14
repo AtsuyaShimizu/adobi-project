@@ -57,6 +57,7 @@ export class GanttChartComponent
   @Input({ required: true }) memos: Memo[] = [];
   @Output() memoChange = new EventEmitter<Memo>();
   @Output() taskClick = new EventEmitter<Task>();
+  @Output() progressInput = new EventEmitter<{ task: Task; value: number }>();
   @Output() rangeChange = new EventEmitter<{ start: Date; end: Date }>();
   @ViewChild('scrollHost') private scrollHost?: ElementRef<HTMLDivElement>;
   @ViewChild('hScrollbar') private hScrollbar?: ElementRef<HTMLDivElement>;
@@ -108,6 +109,8 @@ export class GanttChartComponent
   private focusedCellIdx?: { row: number; col: number };
   protected hoveredColIdx: number | null = null;
   protected editingMemoId: string | null = null;
+  protected editingCell: { row: number; col: number; task: Task } | null = null;
+  protected progressValue = '';
   private isScrolling = false;
   private resizeSub?: Subscription;
   private shouldScrollToToday = true;
@@ -341,6 +344,27 @@ export class GanttChartComponent
       y: cellRect.top - hostRect.top + host.scrollTop,
     };
     this.focusedCellIdx = { row: rowIdx, col: colIdx };
+  }
+
+  startProgressEdit(task: Task, rowIdx: number, colIdx: number): void {
+    this.editingCell = { row: rowIdx, col: colIdx, task };
+    this.progressValue = '';
+  }
+
+  isEditingCell(rowIdx: number, colIdx: number): boolean {
+    return (
+      this.editingCell?.row === rowIdx && this.editingCell?.col === colIdx
+    );
+  }
+
+  commitProgress(): void {
+    if (!this.editingCell) return;
+    const value = Number(this.progressValue);
+    if (!isNaN(value) && value > 0) {
+      this.progressInput.emit({ task: this.editingCell.task, value });
+    }
+    this.editingCell = null;
+    this.progressValue = '';
   }
 
   getFocusedCellPosition(): { x: number; y: number } | null {
