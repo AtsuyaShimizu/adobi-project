@@ -1,12 +1,9 @@
 /**
- * Updated GanttChartComponent with improved horizontal scroll smoothness.
+ * GanttChartComponent with simplified horizontal scrolling.
  *
- * This version caches frequently accessed DOM measurements (sticky column width and header height)
- * to avoid layout thrashing during scroll events, schedules heavy range extension work
- * outside of the scroll handler using requestIdleCallback or setTimeout, and updates
- * range extension flags before scheduling. Prune logic remains unchanged but now
- * co‑exists cleanly with the extension scheduler. Window resize events are handled
- * to refresh cached dimensions.
+ * プルーンや範囲拡張を廃し、タスクの期間から初期表示範囲を算出する。
+ * スクロール時はスクロールバー位置のみ更新し、不要なレイアウト計算を避ける。
+ * sticky列幅やヘッダー高さはキャッシュして滑らかなスクロールを実現する。
  */
 import {
   AfterViewInit,
@@ -26,11 +23,6 @@ import {
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, fromEvent, Subscription } from 'rxjs';
-import {
-  captureAnchor,
-  restoreFromAnchor,
-  ScrollAnchor,
-} from './gantt-scroll-anchor.util';
 import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
 import { MemoComponent } from '../memo/memo.component';
@@ -83,18 +75,8 @@ export class GanttChartComponent
   };
   private rangeStart: Date;
   private rangeEnd: Date;
-  // Increase initial months to reduce frequency of range extension
+  // 表示範囲の前後に確保する月数
   private static readonly INITIAL_MONTHS = 12;
-  // Threshold (days) before triggering range extension. Larger value means extension happens further in advance.
-  private static readonly EXTEND_THRESHOLD_DAYS = 90;
-  // Number of days to extend per extension. Should be >= EXTEND_THRESHOLD_DAYS to provide adequate buffer.
-  private static readonly EXTEND_CHUNK_DAYS = 90;
-  // Threshold (days) before triggering pruning of offscreen days. Larger value delays prune and reduces frequency.
-  private static readonly PRUNE_THRESHOLD_DAYS = 180;
-  // Number of days to prune per prune operation
-  private static readonly PRUNE_CHUNK_DAYS = 90;
-  // Maximum number of days to keep in dateRange before pruning. Larger value reduces prune frequency.
-  private static readonly MAX_WINDOW_DAYS = 360;
   private static readonly CELL_WIDTH = 36;
   private barDrag?: { startX: number; startThumbPos: number };
   private dragData?: {
@@ -125,14 +107,8 @@ export class GanttChartComponent
   protected editingMemoId: string | null = null;
   private isScrolling = false;
   private scrollSub?: Subscription;
-  private pruneScrollSub?: Subscription;
   private resizeSub?: Subscription;
-  private isPruneScheduled = false;
-  private needsPrune = false;
-  // Flags for deferred range extension
-  private needsExtendRight = false;
-  private needsExtendLeft = false;
-  private isExtendScheduled = false;
+  private shouldScrollToToday = true;
   // Cached dimensions to reduce layout thrashing during scroll
   private stickyWidthCache = 0;
   private headerHeightCache = 0;
@@ -237,42 +213,32 @@ export class GanttChartComponent
   }
 
   ngAfterViewInit(): void {
-    // Scroll to today on initial load
-    this.scrollToToday();
-    // Initialize cached dimensions
+    // 初期化時に寸法をキャッシュ
     this.updateDimensionCaches();
     const host = this.scrollHost?.nativeElement;
     if (host) {
-      // Subscribe to scroll events
+      // スクロールイベントを購読
       const scroll$ = fromEvent(host, 'scroll', { passive: true });
       this.scrollSub = scroll$.subscribe(this.onScrollBound);
-      this.pruneScrollSub = scroll$
-        .pipe(debounceTime(300))
-        .subscribe(() => {
-          if (this.needsPrune) {
-            this.needsPrune = false;
-            this.schedulePrune();
-          }
-        });
 
-      // Attach wheel listener for horizontal scrolling with mouse wheel
+      // ホイールによる横スクロール
       host.addEventListener('wheel', this.onWheel, { passive: false });
     }
-    // Update scrollbar thumb on init
+    // スクロールバー位置を初期化
     this.updateScrollbarThumb();
-    // Do not invoke handleScrollRaf immediately to avoid premature prune/extend
-    // Update caches on window resize
+    // リサイズ時に寸法を再計算
     this.resizeSub = fromEvent(window, 'resize')
       .pipe(debounceTime(100))
       .subscribe(() => this.updateDimensionCaches());
+    if (this.shouldScrollToToday) {
+      this.scrollToToday();
+    }
   }
 
   ngOnDestroy(): void {
     this.scrollSub?.unsubscribe();
-    this.pruneScrollSub?.unsubscribe();
     this.resizeSub?.unsubscribe();
 
-    // Detach wheel listener to prevent memory leak
     const host = this.scrollHost?.nativeElement;
     if (host) {
       host.removeEventListener('wheel', this.onWheel);
@@ -283,8 +249,12 @@ export class GanttChartComponent
     if (changes['tasks']) {
       this.buildFilters();
       this.updateTaskViews();
-      this.scrollToToday();
-      // Recompute dimension caches after tasks update (sticky columns may resize)
+      this.updateRange();
+      if (this.shouldScrollToToday) {
+        this.scrollToToday();
+        this.shouldScrollToToday = false;
+      }
+      // 再計算後に寸法を更新
       this.updateDimensionCaches();
     }
   }
@@ -347,11 +317,6 @@ export class GanttChartComponent
     if (!host) return;
 
     const target = this.toStartOfDay(date);
-    while (target < this.rangeStart)
-      this.extendLeftDays(GanttChartComponent.EXTEND_CHUNK_DAYS);
-    while (target > this.rangeEnd)
-      this.extendRightDays(GanttChartComponent.EXTEND_CHUNK_DAYS);
-
     const idx = this.dateRange.findIndex((d) => this.isSameDay(d, target));
     if (idx < 0) return;
 
@@ -361,10 +326,7 @@ export class GanttChartComponent
       );
       const stickyWidth = this.getStickyWidth();
       if (th)
-        host.scrollTo({
-          left: Math.max(th.offsetLeft - stickyWidth, 0),
-          behavior: 'smooth',
-        });
+        host.scrollTo({ left: Math.max(th.offsetLeft - stickyWidth, 0) });
       this.updateScrollbarThumb();
     });
   }
@@ -374,35 +336,7 @@ export class GanttChartComponent
   }
 
   private handleScrollRaf(): void {
-    const host = this.scrollHost?.nativeElement;
-    if (!host) return;
     this.updateScrollbarThumb();
-    const stickyWidth = this.getStickyWidth();
-    const scrollLeft = host.scrollLeft;
-    const firstVisibleIdx = Math.floor(
-      scrollLeft / GanttChartComponent.CELL_WIDTH,
-    );
-    const visibleCols = Math.ceil(
-      (host.clientWidth - stickyWidth) / GanttChartComponent.CELL_WIDTH,
-    );
-    const remainDays =
-      this.dateRange.length - (firstVisibleIdx + visibleCols);
-    const leftOffscreenDays = firstVisibleIdx;
-
-    if (remainDays <= GanttChartComponent.EXTEND_THRESHOLD_DAYS) {
-      this.needsExtendRight = true;
-      this.scheduleExtend();
-    }
-    if (leftOffscreenDays <= GanttChartComponent.EXTEND_THRESHOLD_DAYS) {
-      this.needsExtendLeft = true;
-      this.scheduleExtend();
-    }
-    if (
-      this.dateRange.length > GanttChartComponent.MAX_WINDOW_DAYS &&
-      (leftOffscreenDays >= GanttChartComponent.PRUNE_THRESHOLD_DAYS ||
-        remainDays >= GanttChartComponent.PRUNE_THRESHOLD_DAYS)
-    )
-      this.needsPrune = true;
   }
 
   onCellMouseDown(event: MouseEvent, rowIdx: number, colIdx: number): void {
@@ -649,150 +583,40 @@ export class GanttChartComponent
     this.dateKeys = keys;
   }
 
+  private updateRange(): void {
+    const today = this.getToday();
+    if (this.tasks.length === 0) {
+      this.rangeStart = this.addMonths(
+        today,
+        -GanttChartComponent.INITIAL_MONTHS,
+      );
+      this.rangeEnd = this.addMonths(
+        today,
+        GanttChartComponent.INITIAL_MONTHS,
+      );
+    } else {
+      const starts = this.tasks.map((t) => this.toStartOfDay(t.start));
+      const ends = this.tasks.map((t) => this.toStartOfDay(t.end));
+      const minStart = new Date(
+        Math.min(...starts.map((d) => d.getTime())),
+      );
+      const maxEnd = new Date(Math.max(...ends.map((d) => d.getTime())));
+      this.rangeStart = this.addMonths(
+        minStart,
+        -GanttChartComponent.INITIAL_MONTHS,
+      );
+      this.rangeEnd = this.addMonths(
+        maxEnd,
+        GanttChartComponent.INITIAL_MONTHS,
+      );
+    }
+    this.buildDateRange();
+    this.emitRangeChange();
+    this.cdr.markForCheck();
+  }
+
   private formatDateKey(date: Date): string {
     return date.toISOString().slice(0, 10);
-  }
-
-  private extendRightDays(days: number): void {
-    // Extend range to the right by the specified number of days
-    this.rangeEnd = this.addDays(this.rangeEnd, days);
-    this.buildDateRange();
-    this.emitRangeChange();
-    this.cdr.markForCheck();
-    // Only update scrollbar thumb here; dimensions remain unchanged during extension
-    this.updateScrollbarThumb();
-  }
-
-  private extendLeftDays(days: number): void {
-    // Extend range to the left by the specified number of days
-    this.rangeStart = this.addDays(this.rangeStart, -days);
-    this.buildDateRange();
-    this.emitRangeChange();
-    this.cdr.markForCheck();
-    // Only update scrollbar thumb here; dimensions remain unchanged during extension
-    this.updateScrollbarThumb();
-  }
-
-  private pruneLeftDays(days: number): void {
-    const host = this.scrollHost?.nativeElement;
-    if (!host) return;
-    const anchor: ScrollAnchor = captureAnchor(
-      host,
-      GanttChartComponent.CELL_WIDTH,
-      this.dateKeys,
-    );
-    this.rangeStart = this.addDays(this.rangeStart, days);
-    this.buildDateRange();
-    this.emitRangeChange();
-    this.cdr.markForCheck();
-    queueMicrotask(() => {
-      restoreFromAnchor(
-        host,
-        GanttChartComponent.CELL_WIDTH,
-        this.dateKeys,
-        anchor,
-      );
-    });
-    // Do not update dimension caches here; sticky width remains unchanged
-    this.updateScrollbarThumb();
-  }
-
-  private pruneRightDays(days: number): void {
-    const host = this.scrollHost?.nativeElement;
-    if (!host) return;
-    const anchor: ScrollAnchor = captureAnchor(
-      host,
-      GanttChartComponent.CELL_WIDTH,
-      this.dateKeys,
-    );
-    this.rangeEnd = this.addDays(this.rangeEnd, -days);
-    this.buildDateRange();
-    this.emitRangeChange();
-    this.cdr.markForCheck();
-    queueMicrotask(() => {
-      restoreFromAnchor(
-        host,
-        GanttChartComponent.CELL_WIDTH,
-        this.dateKeys,
-        anchor,
-      );
-    });
-    // Do not update dimension caches here; sticky width remains unchanged
-    this.updateScrollbarThumb();
-  }
-
-  private scheduleExtend(): void {
-    if (this.isExtendScheduled) return;
-    this.isExtendScheduled = true;
-    const cb = () => {
-      this.isExtendScheduled = false;
-      // Perform right extension if needed
-      if (this.needsExtendRight) {
-        this.needsExtendRight = false;
-        this.extendRightDays(GanttChartComponent.EXTEND_CHUNK_DAYS);
-      }
-      // Perform left extension if needed
-      if (this.needsExtendLeft) {
-        this.needsExtendLeft = false;
-        this.extendLeftDays(GanttChartComponent.EXTEND_CHUNK_DAYS);
-      }
-    };
-    const ric = (window as any).requestIdleCallback;
-    if (ric) ric(cb);
-    else setTimeout(cb, 0);
-  }
-
-  private schedulePrune(): void {
-    if (this.isPruneScheduled) return;
-    this.isPruneScheduled = true;
-    const cb = () => {
-      this.isPruneScheduled = false;
-      this.pruneIfNeeded();
-    };
-    const ric = (window as any).requestIdleCallback;
-    if (ric) ric(cb);
-    else setTimeout(cb, 0);
-  }
-
-  private pruneIfNeeded(): void {
-    const host = this.scrollHost?.nativeElement;
-    if (!host) return;
-    const stickyWidth = this.getStickyWidth();
-    const leftOffscreenDays = Math.floor(
-      host.scrollLeft / GanttChartComponent.CELL_WIDTH,
-    );
-    const visibleCols = Math.ceil(
-      (host.clientWidth - stickyWidth) / GanttChartComponent.CELL_WIDTH,
-    );
-    const rightOffscreenDays =
-      this.dateRange.length - (leftOffscreenDays + visibleCols);
-    if (
-      this.dateRange.length > GanttChartComponent.MAX_WINDOW_DAYS &&
-      leftOffscreenDays >= GanttChartComponent.PRUNE_THRESHOLD_DAYS
-    ) {
-      this.pruneLeftDays(GanttChartComponent.PRUNE_CHUNK_DAYS);
-      if (
-        leftOffscreenDays - GanttChartComponent.PRUNE_CHUNK_DAYS >=
-        GanttChartComponent.PRUNE_THRESHOLD_DAYS
-      ) {
-        this.needsPrune = true;
-        this.schedulePrune();
-      }
-      return;
-    }
-    if (
-      this.dateRange.length > GanttChartComponent.MAX_WINDOW_DAYS &&
-      rightOffscreenDays >= GanttChartComponent.PRUNE_THRESHOLD_DAYS
-    ) {
-      this.pruneRightDays(GanttChartComponent.PRUNE_CHUNK_DAYS);
-      if (
-        rightOffscreenDays - GanttChartComponent.PRUNE_CHUNK_DAYS >=
-        GanttChartComponent.PRUNE_THRESHOLD_DAYS
-      ) {
-        this.needsPrune = true;
-        this.schedulePrune();
-      }
-    }
   }
 
   onScrollbarMouseDown(event: MouseEvent): void {
