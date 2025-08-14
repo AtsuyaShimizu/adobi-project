@@ -317,8 +317,7 @@ export class GanttChartComponent
         `.head-2 th[data-idx="${idx}"]`,
       );
       const stickyWidth = this.getStickyWidth();
-      if (th)
-        host.scrollTo({ left: Math.max(th.offsetLeft - stickyWidth, 0) });
+      if (th) host.scrollLeft = Math.max(th.offsetLeft - stickyWidth, 0);
       this.updateScrollbarThumb();
     });
   }

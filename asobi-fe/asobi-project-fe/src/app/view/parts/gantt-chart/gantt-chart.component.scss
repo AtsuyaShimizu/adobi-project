@@ -47,7 +47,9 @@
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
   scrollbar-width: none;
-  scroll-behavior: smooth;
+  /* レンダリング遅延を抑えるためにGPUコンポジットを有効化 */
+  transform: translateZ(0);
+  will-change: scroll-position;
 }
 
 .scroll-host::-webkit-scrollbar {
