@@ -1,0 +1,11 @@
+<form (ngSubmit)="onSubmit()">
+  <label>
+    メールアドレスまたは電話番号
+    <input type="text" name="identifier" [(ngModel)]="identifier" />
+  </label>
+  <label>
+    パスワード
+    <input type="password" name="password" [(ngModel)]="password" />
+  </label>
+  <button type="submit">ログイン</button>
+</form>
