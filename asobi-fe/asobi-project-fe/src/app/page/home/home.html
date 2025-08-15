@@ -1,0 +1,17 @@
+<p>home works!</p>
+<div class="home-container">
+  <!-- 背景アニメーション -->
+  <div class="sphere-container">
+    <div class="sphere" *ngFor="let s of [1,2,3,4,5,6]"></div>
+    <div class="explosion"></div>
+  </div>
+
+  <!-- タイトルとボタン -->
+  <div class="content">
+    <h1 class="title">Innovate Team Management</h1>
+    <div class="buttons">
+      <button class="login-btn" (click)="goToLogin()">ログイン</button>
+      <button class="register-btn" (click)="goToRegister()">新規登録</button>
+    </div>
+  </div>
+</div>

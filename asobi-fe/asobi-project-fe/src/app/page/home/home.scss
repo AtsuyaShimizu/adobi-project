@@ -1,0 +1,97 @@
+/* 背景の設定 */
+.home-container {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: url('../../../../public/cosmic-bg.png') center/cover no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* コンテンツ配置 */
+.content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: #ffffff;
+}
+
+.title {
+  font-size: 48px;
+  margin-bottom: 40px;
+}
+
+.buttons button {
+  margin: 0 10px;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.login-btn {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.register-btn {
+  background-color: #10b981;
+  color: white;
+}
+
+/* アニメーション部分（1-1項で説明） */
+.sphere-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+}
+
+.sphere {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #00a4ff;
+  border-radius: 50%;
+  animation: swirl 6s ease-in-out infinite;
+}
+
+/* 各球の開始タイミングをずらす */
+.sphere:nth-child(2) { animation-delay: 0.5s; }
+.sphere:nth-child(3) { animation-delay: 1s; }
+.sphere:nth-child(4) { animation-delay: 1.5s; }
+.sphere:nth-child(5) { animation-delay: 2s; }
+.sphere:nth-child(6) { animation-delay: 2.5s; }
+
+/* 回転しながら中心へ集まり、最後に消えるアニメーション */
+@keyframes swirl {
+  0%   { transform: rotate(0deg) translate(250px);   opacity: 1; }
+  60%  { transform: rotate(720deg) translate(25px);  opacity: 1; }
+  80%  { transform: rotate(1080deg) translate(0px);  opacity: 1; }
+  100% { transform: rotate(1080deg) translate(0px);  opacity: 0; }
+}
+
+/* 爆発を表現する要素 */
+.explosion {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffffff80, #00a4ff00);
+  transform: translate(-50%, -50%) scale(0);
+  animation: explode 1.5s ease-out infinite;
+  animation-delay: 5s; /* 球が中心に集まった後に爆発 */
+}
+
+@keyframes explode {
+  0%   { transform: translate(-50%, -50%) scale(0);  opacity: 1; }
+  80%  { transform: translate(-50%, -50%) scale(4);  opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(5);  opacity: 0; }
+}
