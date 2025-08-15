@@ -3,17 +3,20 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
+  standalone: true,
   templateUrl: './home.html',
-  styleUrl: './home.scss'
+  styleUrl: './home.scss',
 })
 export class HomeComponent {
+  readonly spheres = [1, 2, 3, 4, 5, 6];
+
   constructor(private router: Router) {}
 
-  goToLogin() {
+  goToLogin(): void {
     this.router.navigate(['/login']);
   }
 
-  goToRegister() {
+  goToRegister(): void {
     this.router.navigate(['/register']);
   }
 }
