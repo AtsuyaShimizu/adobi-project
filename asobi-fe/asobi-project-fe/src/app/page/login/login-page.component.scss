@@ -1,4 +1,8 @@
 :host {
-  display: block;
-  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 16px;
+  background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
 }
