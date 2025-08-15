@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { ScheduleLayoutComponent } from '../../view/layouts/schedule-layout/schedule-layout.component';
 import { ScheduleService } from '../../domain/service/impl/schedule.service.impl';
 import { Task } from '../../domain/model/task';
@@ -17,6 +18,7 @@ export class SchedulePageComponent implements OnInit {
   #scheduleService = inject(ScheduleService);
   #clockService = inject(ClockService);
   #memoService = inject(MemoService);
+  #router = inject(Router);
   protected tasks = this.#scheduleService.tasks;
   protected memos = this.#memoService.memos;
   protected isFormVisible = signal(false);
@@ -107,5 +109,9 @@ export class SchedulePageComponent implements OnInit {
 
   onProgressInput(event: { task: Task; value: number }): void {
     this.#scheduleService.addProgress(event.task.id, event.value);
+  }
+
+  onLogout(): void {
+    this.#router.navigate(['/login']);
   }
 }
