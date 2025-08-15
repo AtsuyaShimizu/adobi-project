@@ -1,8 +1,9 @@
-<p>home works!</p>
 <div class="home-container">
   <!-- 背景アニメーション -->
   <div class="sphere-container">
-    <div class="sphere" *ngFor="let s of [1,2,3,4,5,6]"></div>
+    @for (s of spheres; track s) {
+      <div class="sphere"></div>
+    }
     <div class="explosion"></div>
   </div>
 
