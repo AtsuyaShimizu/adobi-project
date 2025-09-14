@@ -1,9 +1,25 @@
 <div class="memo-modal" (click)="close.emit()">
-  <div class="dialog" (click)="$event.stopPropagation()">
-    <h2>メモ</h2>
-    <textarea [(ngModel)]="text" rows="5"></textarea>
+  <div class="dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="header">
+      <img src="note.svg" alt="" class="header-icon" />
+      <h2 class="title">メモ</h2>
+      <button class="close-btn" (click)="close.emit()" aria-label="閉じる">
+        <img src="add.svg" alt="" class="close-icon" />
+      </button>
+    </div>
+    <div class="body">
+      <textarea
+        [(ngModel)]="text"
+        rows="6"
+        placeholder="ここにメモを入力..."
+      ></textarea>
+      <div class="meta">
+        <span class="count">{{ text.length }} 文字</span>
+      </div>
+    </div>
     <div class="actions">
-      <button class="confirm" (click)="confirm.emit(text)">決定</button>
+      <button class="ghost" type="button" (click)="close.emit()">キャンセル</button>
+      <button class="confirm" type="button" (click)="confirm.emit(text)">決定</button>
     </div>
   </div>
 </div>

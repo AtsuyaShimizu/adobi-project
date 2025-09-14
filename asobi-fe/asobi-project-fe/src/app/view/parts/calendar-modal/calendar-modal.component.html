@@ -1,8 +1,14 @@
 <div class="calendar-modal" (click)="close.emit()">
-  <div class="dialog" (click)="$event.stopPropagation()">
-    <h2>日付選択</h2>
+  <div class="dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="header">
+      <img src="calendar.svg" alt="" class="header-icon" />
+      <h2 class="title">日付選択</h2>
+      <button class="close-btn" (click)="close.emit()" aria-label="閉じる">
+        <img src="add.svg" alt="" class="close-icon" />
+      </button>
+    </div>
     <div class="calendar">
-      <div class="header">
+      <div class="month-nav">
         <button
           class="nav"
           type="button"
@@ -37,8 +43,11 @@
                   (click)="select(day)"
                   [class.other-month]="!isCurrentMonth(day)"
                   [class.selected]="isSelected(day)"
+                  [class.today]="isToday(day)"
+                  [class.weekend]="isWeekend(day)"
+                  [attr.aria-current]="isToday(day) ? 'date' : null"
                 >
-                  {{ day.getDate() }}
+                  <span class="cell">{{ day.getDate() }}</span>
                 </td>
               }
             </tr>

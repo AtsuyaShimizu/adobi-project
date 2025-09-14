@@ -56,6 +56,19 @@ export class CalendarModalComponent {
     return day.toDateString() === this.selectedDate.toDateString();
   }
 
+  protected isToday(day: Date): boolean {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    const d = new Date(day);
+    d.setHours(0, 0, 0, 0);
+    return t.getTime() === d.getTime();
+  }
+
+  protected isWeekend(day: Date): boolean {
+    const w = day.getDay();
+    return w === 0 || w === 6;
+  }
+
   protected submit(): void {
     this.confirm.emit(new Date(this.selectedDate));
   }
@@ -79,4 +92,3 @@ export class CalendarModalComponent {
     }
   }
 }
-

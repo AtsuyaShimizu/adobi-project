@@ -5,9 +5,10 @@
 
   /* このコンポーネント内だけで使う寸法変数 */
   --head1: 28px; /* 月行の高さ */
-  --head2: 28px; /* 日付行の高さ */
+  --head2: 36px; /* 日付行の高さ（曜日2行表示に拡張） */
   --row-h: 24px;
   --scrollbar-h: 16px;
+  --scrollbar-w: 16px;
 
   /* 左6列の幅（累積 left を計算） */
   --w-type: 150px;
@@ -37,10 +38,26 @@
   border-top: 1px solid #e5e7eb;
 }
 
+/* 初期センタリングが完了するまでチラつきを抑制（レイアウトは維持） */
+.gantt-container:not(.ready) .scroll-host,
+.gantt-container:not(.ready) .h-scrollbar-wrapper,
+.gantt-container:not(.ready) .v-scrollbar-wrapper {
+  visibility: hidden;
+}
+
+.gantt-main {
+  height: calc(100% - var(--scrollbar-h));
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
 /* sticky の基準を1つに限定 */
 .scroll-host {
-  width: 100%;
-  height: calc(100% - var(--scrollbar-h));
+  flex: 1 1 auto;
+  width: auto;
+  height: 100%;
   overflow-y: auto;
   overflow-x: auto;
   position: relative;
@@ -61,7 +78,7 @@
   height: var(--scrollbar-h);
   width: 100%;
   display: flex;
-  background: #f3f4f6;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
   border-top: 1px solid #e5e7eb;
 }
 
@@ -99,11 +116,65 @@
   bottom: 2px;
   left: 0;
   width: 40px;
-  background: #9ca3af;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2)),
+    linear-gradient(180deg, #9ca3af, #6b7280);
   border-radius: 4px;
   cursor: pointer;
   user-select: none;
   will-change: transform;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05) inset;
+}
+
+/* 右側 縦スクロールバー */
+.v-scrollbar-wrapper {
+  width: var(--scrollbar-w);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  border-left: 1px solid #e5e7eb;
+}
+
+.top-space {
+  height: var(--head-total);
+  background: inherit;
+  flex: 0 0 auto;
+}
+
+.v-span-nav {
+  width: 100%;
+  height: var(--scrollbar-w);
+  background: inherit;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.v-span-nav.up img { transform: rotate(90deg); width: 12px; height: 12px; }
+.v-span-nav.down img { transform: rotate(90deg); width: 12px; height: 12px; }
+
+.v-scrollbar {
+  position: relative;
+  flex: 1 1 auto;
+  background: inherit;
+}
+
+.v-scrollbar-thumb {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 0;
+  height: 40px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2)),
+    linear-gradient(180deg, #9ca3af, #6b7280);
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  will-change: transform;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05) inset;
 }
 
 /* sticky と相性が良い separate を採用（Safari 安定） */
@@ -169,11 +240,12 @@ th.col-assignee {
 /* ---------------- ヘッダー ---------------- */
 .gantt-table thead .h {
   position: sticky;
-  background: #f3f4f6;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
   color: #374151;
   font-weight: 600;
   padding: 0 6px;
   z-index: 10; /* 基本層 */
+  backdrop-filter: saturate(160%) blur(4px);
 }
 
 /* 1行目（月） */
@@ -189,13 +261,29 @@ th.col-assignee {
 .gantt-table thead .head-2 .h {
   top: var(--head1); /* 1行目の下に固定 */
   height: var(--head2);
-  line-height: var(--head2);
+  line-height: 1.1;
   z-index: 11;
 }
 
 /* ヘッダー下端の太線 */
 .gantt-table thead tr:last-child .h {
   border-bottom: 3px double #9ca3af;
+}
+
+/* 日付セル（曜日2段構成） */
+.date-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.date-cell .d {
+  font-variant-numeric: tabular-nums;
+}
+.date-cell .w {
+  font-size: 11px;
+  color: #6b7280;
 }
 
 /* 月ヘッダーは z-index 11（指示どおり） */
@@ -206,7 +294,7 @@ th.col-assignee {
 /* 左6列のヘッダー（rowspan=2）は最前面＆ヘッダー色を維持 */
 thead .sticky-left.h {
   z-index: 100 !important; /* ボディより上に確実に */
-  background: #f3f4f6 !important; /* ヘッダー色を優先 */
+  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%) !important; /* ヘッダー色を優先 */
 }
 
 /* 左固定列（ヘッダー/ボディ共通） */
@@ -220,6 +308,8 @@ thead .sticky-left.h {
 /* タスク情報列と日付部分の境界線 */
 .gantt-table .col-progress {
   border-right: 3px double #9ca3af !important;
+  /* 左固定エリアの奥行きを演出 */
+  box-shadow: 8px 0 8px -8px rgba(0, 0, 0, 0.18);
 }
 
 /* 列幅と固定位置 */
@@ -270,6 +360,11 @@ thead .sticky-left.h {
   background: #f3f4f6;
 }
 
+/* 行ホバー時、左固定側も連動させる */
+.gantt-table tbody tr:hover .sticky-left {
+  background: #f7f7f8;
+}
+
 .gantt-table th.column-hover,
 .gantt-table td.column-hover {
   background: #f3f4f6;
@@ -310,44 +405,109 @@ thead .sticky-left.h {
   border-right: none;
 }
 
-.day::before {
-  content: "";
+
+/* 実績バー（予定バーの下側に短い帯として表示） */
+.bar-rail {
   position: absolute;
-  top: 20%;
-  bottom: 20%;
-  left: 2px;
-  right: 2px;
+  left: 0;
+  right: 0;
+  top: 4px;
+  bottom: 3px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.bar-plan {
+  height: 10px;
   border-radius: 4px;
   background: transparent;
+  transition: background-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+.bar-plan.on {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0)),
+    var(--bar-planned, rgba(59,130,246,0.25));
+  box-shadow: 0 1px 0 rgba(0,0,0,0.08) inset;
+}
+.bar-plan.start { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+.bar-plan.end   { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+
+.bar-actual {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  bottom: 3px;
+  border-radius: 3px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0)),
+    var(--bar-actual, #e56aa5);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.08) inset;
+  pointer-events: none;
+  z-index: 2;
+  transition: background-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+.bar-actual.out-of-plan { outline: 1px solid #dc2626; }
+
+/* 連続表示のため、セグメント内部の縦罫線を消す */
+.day.is-planned:not(.is-planned-end) { border-right: 0; }
+.day.is-actual:not(.is-actual-end) { border-right: 0; }
+
+/* 実績セグメントの端に角丸を適用 */
+.bar-actual.start { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+.bar-actual.end   { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+
+/* モダンな見栄えのマイクロインタラクション */
+.gantt-table td.column-hover .bar-plan.on {
+  box-shadow: 0 1px 0 rgba(0,0,0,0.12) inset, 0 0 0 1px rgba(0,0,0,0.03);
+}
+.gantt-table td.column-hover .bar-actual {
+  box-shadow: 0 1px 0 rgba(0,0,0,0.12) inset, 0 0 0 1px rgba(0,0,0,0.04);
 }
 
-.day.progress::before {
-  background-color: var(--color-primary, #3b82f6);
+/* 今日列の軽い強調 */
+.day.today .bar-plan.on {
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.25) inset, 0 1px 0 rgba(0,0,0,0.06) inset;
 }
-.day.planned::before {
-  background-color: rgba(59, 130, 246, 0.3);
+.day.today .bar-actual {
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.45) inset, 0 1px 0 rgba(0,0,0,0.06) inset;
 }
 
-.day.progress-start::before {
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
+/* 週末は予定帯の彩度を少し落とす */
+.day.weekend .bar-plan.on {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.05)),
+    var(--bar-planned, rgba(59,130,246,0.18));
 }
-.day.progress-end::before {
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-.day.planned-start::before {
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-}
-.day.planned-end::before {
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
+
 
 /* 月境界の強線 */
 .month-boundary {
   border-left: 2px solid #9ca3af !important;
+}
+
+/* 週末の淡色背景（ヘッダー＆ボディ） */
+.date-col.weekend,
+.day.weekend {
+  background: #fafafa;
+}
+
+/* 本日カラムの強調（薄い帯 + 枠線） */
+.date-col.today,
+.day.today {
+  background: linear-gradient(180deg, rgba(59,130,246,0.08), rgba(59,130,246,0));
+}
+.day.today::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  box-shadow: inset 0 0 0 1px rgba(59,130,246,0.35);
+  pointer-events: none;
 }
 
 /* ---------------- メモ ---------------- */
@@ -355,4 +515,109 @@ thead .sticky-left.h {
   position: absolute;
   top: 0;
   left: 0;
+}
+
+/* バーをテーブル上にオーバーレイ表示するレイヤー */
+.bar-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 8; /* ヘッダー/セルの上、メモより下にしたい場合は7に、上にしたい場合は>memoに */
+}
+
+.ovl-plan,
+.ovl-actual {
+  position: absolute;
+  border-radius: 6px;
+}
+.ovl-plan {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0)),
+    var(--bar-planned, rgba(59,130,246,0.25));
+  box-shadow: 0 1px 0 rgba(0,0,0,0.08) inset;
+}
+.ovl-plan.start { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+.ovl-plan.end   { border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+
+.ovl-actual {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0)),
+    var(--bar-actual, #e56aa5);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.10) inset;
+}
+.ovl-actual.out-of-plan { outline: 1px solid #dc2626; }
+.ovl-actual.start { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+.ovl-actual.end   { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+
+/* ---------------- ダークトーン ---------------- */
+:host-context([data-theme='dark']) {
+  .gantt-container {
+    background: var(--color-surface);
+  }
+
+  .gantt-table thead .h {
+    background: linear-gradient(180deg, #111827 0%, #0b1320 100%);
+    color: #e5e7eb;
+  }
+
+  thead .sticky-left.h {
+    background: linear-gradient(180deg, #111827 0%, #0b1320 100%) !important;
+  }
+
+  .gantt-table tbody tr:hover td:not(.sticky-left) {
+    background: #0f172a;
+  }
+
+  .gantt-table tbody tr:hover .sticky-left {
+    background: #111827;
+  }
+
+  .month-boundary {
+    border-left-color: #475569 !important;
+  }
+
+  .date-col.weekend,
+  .day.weekend {
+    background: #0d1522;
+  }
+
+  .date-col.today,
+  .day.today {
+    background: linear-gradient(180deg, rgba(59,130,246,0.12), rgba(59,130,246,0.03));
+  }
+  .day.today::after {
+    box-shadow: inset 0 0 0 1px rgba(96,165,250,0.5);
+  }
+
+  .date-cell .w {
+    color: #9ca3af;
+  }
+
+  .filter-popup {
+    background: var(--color-surface);
+    border-color: #334155;
+    color: var(--color-text);
+  }
+  .filter-input {
+    background: #0b1320;
+    border: 1px solid #334155;
+    color: var(--color-text);
+    border-radius: 6px;
+    padding: 4px 6px;
+    outline: none;
+  }
+
+  .h-scrollbar-wrapper {
+    background: linear-gradient(180deg, #0d1522 0%, #0b1320 100%);
+    border-top-color: #1f2937;
+  }
+  .h-scrollbar-thumb {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03)),
+      linear-gradient(180deg, #475569, #334155);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  }
 }

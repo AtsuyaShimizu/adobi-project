@@ -7,4 +7,10 @@ export interface Task {
   start: Date;
   end: Date;
   progress: number; // 0-100
+  /**
+   * 実績が投入された日付の配列（任意）。
+   * - Date もしくは 'YYYY-MM-DD' 文字列の混在を許容。
+   * - 存在しない場合は実績バーは表示されません。
+   */
+  actualDates?: (Date | string)[];
 }

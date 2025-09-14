@@ -1,21 +1,48 @@
 <div class="task-detail-modal" (click)="close.emit()">
-  <div class="dialog" (click)="$event.stopPropagation()">
-    <button class="close-btn" (click)="close.emit()">
-      <img src="add.svg" alt="閉じる" class="close-icon" />
+  <div class="dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="close.emit()" aria-label="閉じる">
+      <img src="add.svg" alt="" class="close-icon" />
     </button>
-    <h2>タスク詳細</h2>
+    <div class="header">
+      <img src="note.svg" alt="" class="header-icon" />
+      <h2 class="title">タスク詳細</h2>
+    </div>
     <div class="content">
-      <p><span class="label">分類:</span> {{ task.type }}</p>
-      <p><span class="label">タスク名:</span> {{ task.name }}</p>
-      <p><span class="label">詳細:</span> {{ task.detail }}</p>
-      <p><span class="label">担当者:</span> {{ task.assignee }}</p>
-      <p>
-        <span class="label">開始日:</span> {{ task.start | date: "yyyy-MM-dd" }}
-      </p>
-      <p>
-        <span class="label">終了日:</span> {{ task.end | date: "yyyy-MM-dd" }}
-      </p>
-      <p><span class="label">進捗:</span> {{ task.progress }}%</p>
+      <div class="info-grid">
+        <div class="row">
+          <div class="dt">分類</div>
+          <div class="dd"><span class="badge">{{ task.type }}</span></div>
+        </div>
+        <div class="row">
+          <div class="dt">タスク名</div>
+          <div class="dd name">{{ task.name }}</div>
+        </div>
+        <div class="row">
+          <div class="dt">詳細</div>
+          <div class="dd detail">{{ task.detail }}</div>
+        </div>
+        <div class="row">
+          <div class="dt">担当者</div>
+          <div class="dd"><span class="badge">{{ task.assignee }}</span></div>
+        </div>
+        <div class="row">
+          <div class="dt">開始日</div>
+          <div class="dd"><span class="badge soft">{{ task.start | date: 'yyyy-MM-dd' }}</span></div>
+        </div>
+        <div class="row">
+          <div class="dt">終了日</div>
+          <div class="dd"><span class="badge soft">{{ task.end | date: 'yyyy-MM-dd' }}</span></div>
+        </div>
+        <div class="row">
+          <div class="dt">進捗</div>
+          <div class="dd">
+            <div class="progress">
+              <div class="bar" [style.width.%]="task.progress"></div>
+            </div>
+            <span class="progress-label">{{ task.progress }}%</span>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="actions">
       <button class="edit-btn" (click)="onEdit()">
@@ -28,4 +55,5 @@
       </button>
     </div>
   </div>
+  
 </div>

@@ -18,6 +18,19 @@ export class ScheduleApi {
   #http = inject(HttpClient);
   readonly #baseUrl = 'http://localhost:3000/tasks';
 
+  private parseLocalYMD(s: string): Date {
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return new Date(s);
+  }
+
+  private formatLocalYMD(d: Date): string {
+    const y = d.getFullYear();
+    const m = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
   async list(): Promise<Task[]> {
     const apiTasks = await firstValueFrom(this.#http.get<ApiTask[]>(this.#baseUrl));
     return apiTasks.map(t => ({
@@ -26,8 +39,8 @@ export class ScheduleApi {
       name: t.title,
       detail: t.detail,
       assignee: t.assignee,
-      start: new Date(t.startDate),
-      end: new Date(t.endDate),
+      start: this.parseLocalYMD(t.startDate),
+      end: this.parseLocalYMD(t.endDate),
       progress: 0
     }));
   }
@@ -39,8 +52,8 @@ export class ScheduleApi {
       detail: task.detail,
       phase: task.type,
       assignee: task.assignee,
-      startDate: task.start.toISOString().split('T')[0],
-      endDate: task.end.toISOString().split('T')[0]
+      startDate: this.formatLocalYMD(task.start),
+      endDate: this.formatLocalYMD(task.end)
     };
     await firstValueFrom(this.#http.post<ApiTask>(this.#baseUrl, body));
   }
@@ -52,8 +65,8 @@ export class ScheduleApi {
       detail: task.detail,
       phase: task.type,
       assignee: task.assignee,
-      startDate: task.start.toISOString().split('T')[0],
-      endDate: task.end.toISOString().split('T')[0]
+      startDate: this.formatLocalYMD(task.start),
+      endDate: this.formatLocalYMD(task.end)
     };
     await firstValueFrom(this.#http.put<ApiTask>(`${this.#baseUrl}/${task.id}`, body));
   }

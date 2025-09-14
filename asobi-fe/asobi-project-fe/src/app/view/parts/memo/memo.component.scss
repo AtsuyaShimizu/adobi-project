@@ -1,87 +1,334 @@
 :host {
   display: block;
   position: absolute;
+  --memo-bg-1: #fffbe6;
+  --memo-bg-2: #fff2b2;
+  --memo-fold: #ffe59e;
+  --memo-fold-shadow: rgba(0,0,0,0.12);
+  --memo-border: rgba(0,0,0,0.08);
+  --memo-shadow: 0 8px 16px rgba(0,0,0,0.12), 0 1px 0 rgba(0,0,0,0.08) inset;
+  --memo-radius: 10px;
+  --fold-size: 14px;           /* 折り込みのサイズ */
+  --toolbar-h: 30px;           /* ツールバー高さ */
+  --line-step: 24px;           /* 罫線ピッチ */
+  --line-thickness: 1px;
+  --line-color: rgba(0,0,0,0.05);
+  /* ツールボックス/ピン関連（最小幅計算用） */
+  --icon-size: 22px;
+  --icon-gap: 6px;
+  --btn-count: 3;                 /* 表示しているアイコンボタンの個数 */
+  --toolbox-right: 8px;           /* 右上固定のオフセット */
+  --pin-size: 10px;               /* ピン直径 */
+  --btn-strip: calc(var(--btn-count) * var(--icon-size) + (var(--btn-count) - 1) * var(--icon-gap));
+  --pin-clearance: calc(3 * var(--pin-size)); /* ピンとボタンの重なり回避用の余白 */
+  --content-top-gap: 12px;     /* ツールバー下の余白 */
+  --first-line-offset: calc(var(--line-step) - 6px); /* 1行目の線の位置微調整 */
+  /* 右上ボタン群とセンターピンが重ならないための最小幅 */
+  min-width: calc(2 * (var(--toolbox-right) + var(--btn-strip) + var(--pin-clearance)));
+  min-height: 120px;
+  container-type: inline-size; /* コンテナクエリ */
 }
 
+/* 狭い幅でのボタン折り畳みは廃止（最小幅で対応） */
+
+/* 既定では more ボタンは非表示 */
+.toolbox .more-button { display: none; }
+
+/* ツールボックス（アイコンのみボタン） */
+.toolbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  left: auto;
+  height: var(--toolbar-h);
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--icon-gap);
+  z-index: 5;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  aspect-ratio: 1/1;
+  padding: 0;
+  line-height: 0;
+  background: rgba(255,255,255,0.65);
+  border: 1px solid rgba(0,0,0,0.14);
+  border-radius: 50% !important;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: box-shadow .15s ease, transform .15s ease, background-color .15s ease;
+  color: #374151;
+}
+.icon-button:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.18); transform: translateY(-1px); }
+.icon-button .icon { width: 10px; height: 10px; display: block; }
+.icon-button svg { display:block; }
+.icon-button svg path, .icon-button svg circle { stroke: #374151; }
+.hidden-input { display: none; }
+
+/* メモコンテナ */
 .memo-content {
   width: 100%;
   height: 100%;
-  background: #fef9c3;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  border: none;
+  position: relative;
+  background: linear-gradient(180deg, var(--memo-bg-1), var(--memo-bg-2));
+  border: 1px solid var(--memo-border);
+  border-radius: var(--memo-radius);
+  box-shadow: var(--memo-shadow);
   overflow: hidden;
-  border-radius: 4px 0 4px 4px;
-  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+  /* 折り返し表現は廃止 */
+  clip-path: none;
 }
 
-:host::before,
-:host::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-}
+/* 折り込み（ドッグイヤー） */
+.memo-content::before, .memo-content::after { content: none !important; display: none !important; }
 
-:host::before {
-  border-style: solid;
-  border-width: 0 20px 20px 0;
-  border-color: transparent #fef9c3 #fef9c3 transparent;
-  z-index: 2;
-}
-
-:host::after {
-  border-style: solid;
-  border-width: 0 0 20px 20px;
-  border-color: transparent transparent #fde68a transparent;
-  box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.1);
-  z-index: 1;
-}
-
-.resize-handle {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 16px;
-  height: 16px;
-  cursor: se-resize;
-  background: transparent;
-}
-
-:host.editing {
-  cursor: text;
-}
-
-:host:not(.editing) {
-  cursor: move;
-}
-
+/* 本文（罫線とベースラインを一致） */
 .memo-body {
-  padding: 20px 4px 4px;
+  position: relative;
+  padding: calc(var(--toolbar-h) + var(--content-top-gap)) 10px 12px 12px; /* 上部にツールバー分＋余白 */
   width: 100%;
   height: 100%;
+  box-sizing: border-box; /* パディング分も含めて100%に収める */
   overflow: auto;
   outline: none;
   cursor: inherit;
+  font-size: 13.5px;
+  line-height: var(--line-step);
+  color: #3f3f46;
+  background-origin: content-box; /* コンテンツ領域先頭から罫線開始 */
+  background-clip: content-box;   /* 罫線をパディング外に描画しない */
+  background-position: 0 var(--first-line-offset); /* 1行目の線位置を微調整 */
+  background-image: linear-gradient(to bottom, var(--line-color) var(--line-thickness), transparent 0);
+  background-size: 100% var(--line-step);
+  background-repeat: repeat;
 }
 
-.edit-button {
+.memo-body img { max-width: 100%; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+
+/* ドロップダウンメニュー（狭幅時） */
+.more-menu {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 28px; left: 0;
+  min-width: 120px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  padding: 6px;
+  display: none;
+  z-index: 7;
+}
+.more-menu.open { display: block; }
+.more-menu button { display:block; width:100%; text-align:left; background:transparent; border:0; padding:8px 10px; border-radius:8px; cursor:pointer; color:#374151; font-size:12px; }
+.more-menu button:hover { background:#f3f4f6; }
+
+/* ピン */
+.memo-pin {
+  position: absolute;
+  top: 8px; left: 50%; transform: translateX(-50%);
+  width: var(--pin-size); height: var(--pin-size);
+  background: radial-gradient(circle at 30% 30%, #fff, #d1d5db);
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 50%;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.18);
+  z-index: 6; pointer-events: none;
+}
+
+/* リサイズハンドル */
+.resize-handle {
+  position: absolute;
+  right: 2px; bottom: 2px;
+  width: 14px; height: 14px;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.08) 50%), radial-gradient(circle at 100% 100%, rgba(0,0,0,0.12), transparent 60%);
+  border-radius: 2px;
+}
+
+/* フォーカスリング（編集時） */
+.focus-ring { position: absolute; inset: 0; border-radius: var(--memo-radius); box-shadow: 0 0 0 1.5px rgba(59,130,246,0.45) inset; opacity: 0; pointer-events: none; transition: opacity .15s ease; }
+:host.editing .focus-ring { opacity: 1; }
+
+/* ダークテーマ */
+:host-context([data-theme='dark']) {
+  --memo-bg-1: #171a21;
+  --memo-bg-2: #0f141b;
+  --memo-fold: #222836;
+  --memo-border: rgba(255,255,255,0.08);
+  --memo-shadow: 0 8px 16px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.03) inset;
+}
+
+.day.today .memo-content { box-shadow: 0 8px 16px rgba(59,130,246,0.15), 0 1px 0 rgba(0,0,0,0.08) inset; }
+:host {
+  display: block;
+  position: absolute;
+  --memo-bg-1: #fffbe6;
+  --memo-bg-2: #fff2b2;
+  --memo-fold: #ffe59e;
+  --memo-fold-shadow: rgba(0,0,0,0.12);
+  --memo-border: rgba(0,0,0,0.08);
+  --memo-shadow: 0 8px 16px rgba(0,0,0,0.12), 0 1px 0 rgba(0,0,0,0.08) inset;
+  --memo-radius: 10px;
+  --fold-size: 14px;           /* 折り込みのサイズ */
+  --toolbar-h: 30px;           /* ツールバー高さ */
+  --line-step: 24px;           /* 罫線ピッチ */
+  --line-thickness: 1px;
+  --line-color: rgba(0,0,0,0.05);
+  /* ツールボックス/ピン関連（最小幅計算用） */
+  --icon-size: 22px;
+  --icon-gap: 6px;
+  --btn-count: 3;                 /* 表示しているアイコンボタンの個数 */
+  --toolbox-right: 8px;           /* 右上固定のオフセット */
+  --pin-size: 10px;               /* ピン直径 */
+  --btn-strip: calc(var(--btn-count) * var(--icon-size) + (var(--btn-count) - 1) * var(--icon-gap));
+  --pin-clearance: calc(3 * var(--pin-size)); /* ピンとボタンの重なり回避用の余白 */
+  --content-top-gap: 12px;     /* ツールバー下の余白 */
+  --first-line-offset: calc(var(--line-step) - 6px); /* 1行目の線の位置微調整 */
+  /* 右上ボタン群とセンターピンが重ならないための最小幅 */
+  min-width: calc(2 * (var(--toolbox-right) + var(--btn-strip) + var(--pin-clearance)));
+  min-height: 120px;
+  container-type: inline-size; /* コンテナクエリ */
+}
+
+/* 狭い幅でのボタン折り畳みは廃止（最小幅で対応） */
+
+/* 既定では more ボタンは非表示 */
+.toolbox .more-button { display: none; }
+
+/* ツールボックス（アイコンのみボタン） */
+.toolbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  left: auto;
+  height: var(--toolbar-h);
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.7);
-  border: none;
-  padding: 2px 4px;
-  font-size: 10px;
-  cursor: pointer;
+  flex-wrap: nowrap;
+  gap: var(--icon-gap);
+  z-index: 5;
 }
 
-.edit-button .icon {
-  width: 12px;
-  height: 12px;
-  margin-right: 2px;
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  aspect-ratio: 1/1;
+  padding: 0;
+  line-height: 0;
+  background: rgba(255,255,255,0.65);
+  border: 1px solid rgba(0,0,0,0.14);
+  border-radius: 50% !important;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: box-shadow .15s ease, transform .15s ease, background-color .15s ease;
+  color: #374151;
 }
+.icon-button:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.18); transform: translateY(-1px); }
+.icon-button .icon { width: 10px; height: 10px; display: block; }
+.icon-button svg { display:block; }
+.icon-button svg path, .icon-button svg circle { stroke: #374151; }
+.hidden-input { display: none; }
+
+/* メモコンテナ */
+.memo-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(180deg, var(--memo-bg-1), var(--memo-bg-2));
+  border: 1px solid var(--memo-border);
+  border-radius: var(--memo-radius);
+  box-shadow: var(--memo-shadow);
+  overflow: hidden;
+  /* 折り返し表現は廃止 */
+  clip-path: none;
+}
+
+/* 折り込み（ドッグイヤー） */
+.memo-content::before, .memo-content::after { content: none !important; display: none !important; }
+
+/* 本文（罫線とベースラインを一致） */
+.memo-body {
+  position: relative;
+  padding: calc(var(--toolbar-h) + var(--content-top-gap)) 10px 12px 12px; /* 上部にツールバー分＋余白 */
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box; /* パディング分も含めて100%に収める */
+  overflow: auto;
+  outline: none;
+  cursor: inherit;
+  font-size: 13.5px;
+  line-height: var(--line-step);
+  color: #3f3f46;
+  background-origin: content-box; /* コンテンツ領域先頭から罫線開始 */
+  background-clip: content-box;   /* 罫線をパディング外に描画しない */
+  background-position: 0 var(--first-line-offset); /* 1行目の線位置を微調整 */
+  background-image: linear-gradient(to bottom, var(--line-color) var(--line-thickness), transparent 0);
+  background-size: 100% var(--line-step);
+  background-repeat: repeat;
+}
+
+.memo-body img { max-width: 100%; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+
+/* ドロップダウンメニュー（狭幅時） */
+.more-menu {
+  position: absolute;
+  top: 28px; left: 0;
+  min-width: 120px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  padding: 6px;
+  display: none;
+  z-index: 7;
+}
+.more-menu.open { display: block; }
+.more-menu button { display:block; width:100%; text-align:left; background:transparent; border:0; padding:8px 10px; border-radius:8px; cursor:pointer; color:#374151; font-size:12px; }
+.more-menu button:hover { background:#f3f4f6; }
+
+/* ピン */
+.memo-pin {
+  position: absolute;
+  top: 8px; left: 50%; transform: translateX(-50%);
+  width: var(--pin-size); height: var(--pin-size);
+  background: radial-gradient(circle at 30% 30%, #fff, #d1d5db);
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 50%;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.18);
+  z-index: 6; pointer-events: none;
+}
+
+/* リサイズハンドル */
+.resize-handle {
+  position: absolute;
+  right: 2px; bottom: 2px;
+  width: 14px; height: 14px;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.08) 50%), radial-gradient(circle at 100% 100%, rgba(0,0,0,0.12), transparent 60%);
+  border-radius: 2px;
+}
+
+/* フォーカスリング（編集時） */
+.focus-ring { position: absolute; inset: 0; border-radius: var(--memo-radius); box-shadow: 0 0 0 1.5px rgba(59,130,246,0.45) inset; opacity: 0; pointer-events: none; transition: opacity .15s ease; }
+:host.editing .focus-ring { opacity: 1; }
+
+/* ダークテーマ */
+:host-context([data-theme='dark']) {
+  --memo-bg-1: #171a21;
+  --memo-bg-2: #0f141b;
+  --memo-fold: #222836;
+  --memo-border: rgba(255,255,255,0.08);
+  --memo-shadow: 0 8px 16px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.03) inset;
+}
+
+.day.today .memo-content { box-shadow: 0 8px 16px rgba(59,130,246,0.15), 0 1px 0 rgba(0,0,0,0.08) inset; }

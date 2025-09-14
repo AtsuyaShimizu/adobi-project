@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { ScheduleLayoutComponent } from '../../view/layouts/schedule-layout/schedule-layout.component';
-import { ScheduleService } from '../../domain/service/impl/schedule.service.impl';
 import { Task } from '../../domain/model/task';
 import { ClockService } from '../../domain/service/impl/clock.service.impl';
 import { MemoService } from '../../domain/service/impl/memo.service.impl';
 import { Memo } from '../../domain/model/memo';
+
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { ScheduleService } from '../../domain/service/impl/schedule.service.impl';
 
 @Component({
   selector: 'app-schedule-page',
@@ -107,11 +108,14 @@ export class SchedulePageComponent implements OnInit {
     this.closeTaskDetail();
   }
 
-  onProgressInput(event: { task: Task; value: number }): void {
-    this.#scheduleService.addProgress(event.task.id, event.value);
+  onProgressInput(event: { task: Task; value: number; date: Date }): void {
+    this.#scheduleService.addProgressAtDate(event.task.id, event.value, event.date);
   }
 
   onLogout(): void {
     this.#router.navigate(['/login']);
+  }
+  onMemoDelete(id: string): void {
+    this.#memoService.remove(id);
   }
 }

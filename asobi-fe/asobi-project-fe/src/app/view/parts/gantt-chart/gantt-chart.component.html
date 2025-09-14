@@ -1,7 +1,8 @@
 <!-- NOTE: AGENTS.md の依存ルール遵守。View 役割内に限定した変更 -->
-<div class="gantt-container" (click)="closeFilterPopup()">
-  <div class="scroll-host" #scrollHost>
-    <table class="gantt-table">
+<div class="gantt-container" [class.ready]="isReady" (click)="closeFilterPopup()">
+  <div class="gantt-main">
+    <div class="scroll-host" #scrollHost>
+      <table class="gantt-table">
       <thead>
         <!-- 1行目：左6列は実際に rowspan=2（タスクヘッダーは1セルで2行分） -->
         <tr class="head-1">
@@ -11,7 +12,7 @@
               src="sort.svg"
               alt="ソート"
               class="sort-icon"
-              (click)="toggleFilterPopup('type', $event)"
+              (click)="$event.stopPropagation(); toggleFilterPopup('type')"
             />
             @if (filterPopup === "type") {
               <div class="filter-popup" (click)="$event.stopPropagation()">
@@ -43,7 +44,7 @@
               src="sort.svg"
               alt="ソート"
               class="sort-icon"
-              (click)="toggleFilterPopup('name', $event)"
+              (click)="$event.stopPropagation(); toggleFilterPopup('name')"
             />
             @if (filterPopup === "name") {
               <div class="filter-popup" (click)="$event.stopPropagation()">
@@ -75,7 +76,7 @@
               src="sort.svg"
               alt="ソート"
               class="sort-icon"
-              (click)="toggleFilterPopup('assignee', $event)"
+              (click)="$event.stopPropagation(); toggleFilterPopup('assignee')"
             />
             @if (filterPopup === "assignee") {
               <div class="filter-popup" (click)="$event.stopPropagation()">
@@ -126,8 +127,14 @@
               (mouseenter)="onColumnMouseEnter(i)"
               (mouseleave)="onColumnMouseLeave()"
               [class.column-hover]="hoveredColIdx === i"
+              [class.today]="isToday(date)"
+              [class.weekend]="isWeekend(date)"
+              [attr.title]="date | date: 'yyyy/MM/dd (EEE)'"
             >
-              {{ date | date: "dd" }}
+              <div class="date-cell">
+                <span class="d">{{ date | date: 'dd' }}</span>
+                <span class="w">{{ date | date: 'EEE' }}</span>
+              </div>
             </th>
           }
         </tr>
@@ -164,13 +171,10 @@
                   (click)="startProgressEdit(view.task, i, j)"
                   [class.column-hover]="hoveredColIdx === j"
                   [class.focused]="isFocusedCell(i, j)"
-                  [class.progress]="isProgress(view, date)"
-                  [class.planned]="isPlanned(view, date)"
-                  [class.progress-start]="isProgressStart(view, date)"
-                  [class.progress-end]="isProgressEnd(view, date)"
-                  [class.planned-start]="isPlannedStart(view, date)"
-                  [class.planned-end]="isPlannedEnd(view, date)"
                   [class.month-boundary]="isMonthStart(date) && j !== 0"
+                  [class.today]="isToday(date)"
+                  [class.weekend]="isWeekend(date)"
+                  [attr.title]="date | date: 'yyyy/MM/dd (EEE)'"
                 >
                   @if (isEditingCell(i, j)) {
                     <input
@@ -203,6 +207,9 @@
                   [class.column-hover]="hoveredColIdx === j"
                   [class.focused]="isFocusedCell(i, j)"
                   [class.month-boundary]="isMonthStart(date) && j !== 0"
+                  [class.today]="isToday(date)"
+                  [class.weekend]="isWeekend(date)"
+                  [attr.title]="date | date: 'yyyy/MM/dd (EEE)'"
                 ></td>
               }
             </tr>
@@ -210,6 +217,14 @@
         }
       </tbody>
     </table>
+    <div class="bar-layer">
+      @for (bar of plannedBars; track bar.id) {
+        <div class="ovl-plan" [style.left.px]="bar.left" [style.top.px]="bar.top" [style.width.px]="bar.width" [style.height.px]="bar.height" [class.start]="bar.start" [class.end]="bar.end"></div>
+      }
+      @for (bar of actualBars; track bar.id) {
+        <div class="ovl-actual" [style.left.px]="bar.left" [style.top.px]="bar.top" [style.width.px]="bar.width" [style.height.px]="bar.height" [class.start]="bar.start" [class.end]="bar.end" [class.out-of-plan]="bar.outOfPlan"></div>
+      }
+    </div>
     <div class="memo-layer">
       @for (memo of memos; track memo.id) {
         <app-memo
@@ -220,8 +235,22 @@
           (memoResizeMouseDown)="onMemoResizeMouseDown($event, memo)"
           (memoBlur)="onMemoBlur($event, memo)"
           (editToggle)="toggleEdit(memo, $event.el, $event.event)"
+          (memoDelete)="onMemoDelete(memo.id)"
         ></app-memo>
       }
+    </div>
+    </div>
+    <div class="v-scrollbar-wrapper">
+      <div class="top-space"></div>
+      <button class="v-span-nav up" (click)="scrollVerticalByPage(-1)" aria-label="上へ">
+        <img src="arrow-left.svg" alt="" />
+      </button>
+      <div class="v-scrollbar" #vScrollbar (mousedown)="onVScrollbarMouseDown($event)">
+        <div class="v-scrollbar-thumb" #vScrollbarThumb></div>
+      </div>
+      <button class="v-span-nav down" (click)="scrollVerticalByPage(1)" aria-label="下へ">
+        <img src="arrow-right.svg" alt="" />
+      </button>
     </div>
   </div>
   <div class="h-scrollbar-wrapper">

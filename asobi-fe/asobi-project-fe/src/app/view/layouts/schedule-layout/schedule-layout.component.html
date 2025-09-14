@@ -1,4 +1,5 @@
 <div class="layout">
+<div class="layout">
   <app-header (logout)="logout.emit()"></app-header>
   <div class="content">
     <div class="toolbar">
@@ -20,36 +21,45 @@
       [tasks]="tasks"
       [memos]="memos"
       (memoChange)="memoChange.emit($event)"
+      (memoDelete)="onMemoDelete($event)"
       (taskClick)="openTaskDetail.emit($event)"
       (progressInput)="progressInput.emit($event)"
     ></app-gantt-chart>
-    @if (calendarVisible) {
+    @if (isCalendarVisible) {
       <app-calendar-modal
         (confirm)="onCalendarConfirm($event)"
         (close)="closeCalendar.emit()"
       ></app-calendar-modal>
     }
-    @if (memoVisible) {
+    @if (isMemoVisible) {
       <app-memo-modal
         (confirm)="onMemoConfirm($event)"
         (close)="closeMemo.emit()"
       ></app-memo-modal>
     }
-    @if (formVisible) {
+    @if (isFormVisible) {
       <div class="task-dialog" (click)="closeForm.emit()">
-        <div class="dialog" (click)="$event.stopPropagation()">
-          <h2>タスク追加</h2>
-          <app-task-form
-            [initialTask]="editingTask"
-            (save)="create.emit($event); closeForm.emit()"
-          ></app-task-form>
+        <div class="dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+          <div class="header">
+            <img src="add.svg" alt="" class="header-icon" />
+            <h2 class="title">タスク追加</h2>
+            <button class="close-btn" (click)="closeForm.emit()" aria-label="閉じる">
+              <img src="add.svg" alt="" class="close-icon" />
+            </button>
+          </div>
+          <div class="body">
+            <app-task-form
+              [initialTask]="editingTask"
+              (save)="create.emit($event); closeForm.emit()"
+            ></app-task-form>
+          </div>
           <div class="actions">
-            <button class="close" (click)="closeForm.emit()">閉じる</button>
+            <button class="ghost" (click)="closeForm.emit()">キャンセル</button>
           </div>
         </div>
       </div>
     }
-    @if (taskDetailVisible && selectedTask) {
+    @if (isTaskDetailVisible && selectedTask) {
       <app-task-detail-modal
         [task]="selectedTask"
         (close)="closeTaskDetail.emit()"

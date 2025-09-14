@@ -9,6 +9,9 @@ import { Memo } from '../../../domain/model/memo';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MemoComponent {
+  // ボタンとピンが重ならずすべて表示できる最低幅（px）
+  private static readonly MIN_WIDTH_PX = 190;
+  menuOpen = false;
   @Input({ required: true }) memo!: Memo;
   @Input() editing = false;
   @Output() memoMouseDown = new EventEmitter<MouseEvent>();
@@ -16,7 +19,9 @@ export class MemoComponent {
   @Output() memoResizeMouseDown = new EventEmitter<MouseEvent>();
   @Output() memoBlur = new EventEmitter<FocusEvent>();
   @Output() editToggle = new EventEmitter<{ el: HTMLElement; event: MouseEvent }>();
+  @Output() memoDelete = new EventEmitter<string>();
   @ViewChild('memoBody', { static: true }) memoBody!: ElementRef<HTMLDivElement>;
+  @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
   @HostBinding('class.memo') memoClass = true;
   @HostBinding('class.editing') get isEditing(): boolean {
@@ -28,8 +33,9 @@ export class MemoComponent {
   @HostBinding('style.top.px') get top(): number {
     return this.memo.y;
   }
+  @HostBinding('style.min-width.px') minWidth = MemoComponent.MIN_WIDTH_PX;
   @HostBinding('style.width.px') get width(): number {
-    return this.memo.width;
+    return Math.max(this.memo.width, MemoComponent.MIN_WIDTH_PX);
   }
   @HostBinding('style.height.px') get height(): number {
     return this.memo.height;
@@ -55,7 +61,51 @@ export class MemoComponent {
   }
 
   onEditButton(event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
     this.editToggle.emit({ el: this.memoBody.nativeElement, event });
   }
-}
 
+  onDeleteButton(event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.memoDelete.emit(this.memo.id);
+  }
+
+  onAddImageClick(event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.fileInput?.nativeElement.click();
+  }
+
+  onImageSelect(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    if (!input || !input.files || input.files.length === 0) return;
+    this.insertImages(Array.from(input.files));
+    input.value = '';
+  }
+
+  private insertImages(files: File[]): void {
+    const body = this.memoBody?.nativeElement;
+    if (!body) return;
+    files.filter(f => f.type.startsWith('image/')).forEach(f => {
+      const url = URL.createObjectURL(f);
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = 'image';
+      img.style.maxWidth = '100%';
+      img.style.display = 'block';
+      img.style.margin = '6px 0';
+      body.appendChild(img);
+    });
+  }
+  toggleMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.menuOpen = !this.menuOpen;
+  }
+
+  @HostListener('document:click')
+  onDocClick(): void {
+    this.menuOpen = false;
+  }
+}

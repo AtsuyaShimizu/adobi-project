@@ -1,11 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  ViewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { Task } from '../../../domain/model/task';
 import { Memo } from '../../../domain/model/memo';
 import { GanttChartComponent } from '../../parts/gantt-chart/gantt-chart.component';
@@ -33,15 +26,17 @@ import { TaskDetailModalComponent } from '../../parts/task-detail-modal/task-det
   styleUrl: './schedule-layout.component.scss'
 })
 export class ScheduleLayoutComponent {
+  @Output() memoDelete = new EventEmitter<string>();
+
   @ViewChild('ganttChart') private ganttChart?: GanttChartComponent;
 
   @Input({ required: true }) tasks: Task[] = [];
   @Input({ required: true }) memos: Memo[] = [];
-  @Input() formVisible = false;
-  @Input() memoVisible = false;
+  @Input() isFormVisible = false;
+  @Input() isMemoVisible = false;
   @Input() dateTime = '';
-  @Input() calendarVisible = false;
-  @Input() taskDetailVisible = false;
+  @Input() isCalendarVisible = false;
+  @Input() isTaskDetailVisible = false;
   @Input() selectedTask: Task | null = null;
   @Input() editingTask: Task | null = null;
   @Output() create = new EventEmitter<Task>();
@@ -57,7 +52,7 @@ export class ScheduleLayoutComponent {
   @Output() closeTaskDetail = new EventEmitter<void>();
   @Output() editTask = new EventEmitter<Task>();
   @Output() deleteTask = new EventEmitter<string>();
-  @Output() progressInput = new EventEmitter<{ task: Task; value: number }>();
+  @Output() progressInput = new EventEmitter<{ task: Task; value: number; date: Date }>();
   @Output() logout = new EventEmitter<void>();
 
   onCalendarConfirm(date: Date): void {
@@ -70,5 +65,8 @@ export class ScheduleLayoutComponent {
       this.ganttChart?.getFocusedCellPosition() ??
       this.ganttChart?.getTodayColumnPosition();
     this.memoCreate.emit({ text, x: pos?.x ?? 0, y: pos?.y ?? 0 });
+  }
+  onMemoDelete(id: string): void {
+    this.memoDelete.emit(id);
   }
 }
