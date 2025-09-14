@@ -10,12 +10,11 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './login-form.component.scss'
 })
 export class LoginFormComponent {
-  identifier = '';
-  password = '';
+  email = '';
 
-  @Output() login = new EventEmitter<{ identifier: string; password: string }>();
+  @Output() login = new EventEmitter<{ email: string }>();
 
   onSubmit(): void {
-    this.login.emit({ identifier: this.identifier, password: this.password });
+    this.login.emit({ email: this.email });
   }
 }

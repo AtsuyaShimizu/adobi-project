@@ -1,16 +1,11 @@
 <form (ngSubmit)="onSubmit()">
   <h2>ログイン</h2>
   <input
-    type="text"
-    name="identifier"
-    [(ngModel)]="identifier"
-    placeholder="メールアドレスまたは電話番号"
+    type="email"
+    name="email"
+    [(ngModel)]="email"
+    placeholder="メールアドレス"
+    required
   />
-  <input
-    type="password"
-    name="password"
-    [(ngModel)]="password"
-    placeholder="パスワード"
-  />
-  <button type="submit">ログイン</button>
+  <button type="submit">ログインリンク送信</button>
 </form>
