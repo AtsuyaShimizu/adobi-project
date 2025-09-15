@@ -3,6 +3,7 @@ import { AuthServiceInterface } from '../interface/auth.service';
 import { firebaseApp } from '../../../infrastructure/firebase/firebase';
 import {
   Auth,
+  User,
   getAuth,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
@@ -18,7 +19,7 @@ export class AuthService implements AuthServiceInterface {
 
   constructor(private authState: AuthState) {
     this.#auth = getAuth(firebaseApp);
-    onAuthStateChanged(this.#auth, (user) => {
+    onAuthStateChanged(this.#auth, (user: User | null) => {
       this.authState.setUser(user);
     });
   }

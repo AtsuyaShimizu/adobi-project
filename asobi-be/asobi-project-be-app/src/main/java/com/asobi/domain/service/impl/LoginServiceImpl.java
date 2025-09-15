@@ -1,10 +1,12 @@
 package com.asobi.domain.service.impl;
 
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
 import com.asobi.domain.model.Account;
 import com.asobi.domain.repository.IF.LoginRepositoryIF;
 import com.asobi.domain.service.IF.LoginServiceIF;
-import java.util.Optional;
-import org.springframework.stereotype.Service;
 
 /**
  * ログインサービスの実装。
@@ -16,6 +18,10 @@ public class LoginServiceImpl implements LoginServiceIF {
 
     public LoginServiceImpl(LoginRepositoryIF loginRepository) {
         this.loginRepository = loginRepository;
+    }
+    
+    public void logout(String username) {
+    	loginRepository.findByCredentials(username, "aaa");
     }
 
     @Override
