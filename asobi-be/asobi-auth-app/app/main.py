@@ -2,6 +2,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.auth import require_beta_user
+from app.invite import router as admin_router
 
 app = FastAPI(title="Asobi Auth App (Minimum)")
 
@@ -19,6 +20,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 管理API
+app.include_router(admin_router)
 
 @app.get("/health")
 async def health():
