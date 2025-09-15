@@ -5,9 +5,8 @@ import {
   Auth,
   User,
   getAuth,
-  sendSignInLinkToEmail,
-  isSignInWithEmailLink,
-  signInWithEmailLink,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut as firebaseSignOut
 } from 'firebase/auth';
@@ -24,26 +23,12 @@ export class AuthService implements AuthServiceInterface {
     });
   }
 
-  async sendEmailLink(email: string): Promise<void> {
-    const actionCodeSettings = {
-      url: `${location.origin}/login`,
-      handleCodeInApp: true
-    };
-    await sendSignInLinkToEmail(this.#auth, email, actionCodeSettings);
-    window.localStorage.setItem('signInEmail', email);
+  async signUp(email: string, password: string): Promise<void> {
+    await createUserWithEmailAndPassword(this.#auth, email, password);
   }
 
-  async completeSignIn(url: string): Promise<boolean> {
-    if (isSignInWithEmailLink(this.#auth, url)) {
-      const email = window.localStorage.getItem('signInEmail');
-      if (!email) {
-        return false;
-      }
-      await signInWithEmailLink(this.#auth, email, url);
-      window.localStorage.removeItem('signInEmail');
-      return true;
-    }
-    return false;
+  async signIn(email: string, password: string): Promise<void> {
+    await signInWithEmailAndPassword(this.#auth, email, password);
   }
 
   async signOut(): Promise<void> {
