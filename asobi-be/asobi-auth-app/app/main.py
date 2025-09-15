@@ -2,6 +2,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.auth import require_beta_user
+from app.invite import router as admin_router  # 管理APIを使う場合
 
 app = FastAPI(title="Asobi Auth App (Minimum)")
 
@@ -20,6 +21,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 管理API（招待作成など）を有効化
+app.include_router(admin_router)
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -32,5 +36,9 @@ async def demo_data(user=Depends(require_beta_user)):
             {"id": "demo-1", "title": "Sample Demo 1"},
             {"id": "demo-2", "title": "Sample Demo 2"},
         ],
-        "who": {"uid": user["uid"], "email": user.get("email"), "role": user.get("role")},
+        "who": {
+            "uid": user["uid"],
+            "email": user.get("email"),
+            "role": user.get("role"),
+        },
     }

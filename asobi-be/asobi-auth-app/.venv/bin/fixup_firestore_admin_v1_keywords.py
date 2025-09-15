@@ -1,6 +1,6 @@
 #!/Users/atsuya/asobi/asobi-be/asobi-auth-app/.venv/bin/python3.11
 # -*- coding: utf-8 -*-
-# Copyright 2025 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,34 +45,26 @@ def partition(
 class firestore_adminCallTransformer(cst.CSTTransformer):
     CTRL_PARAMS: Tuple[str] = ('retry', 'timeout', 'metadata')
     METHOD_TO_PARAMS: Dict[str, Tuple[str]] = {
-        'bulk_delete_documents': ('name', 'collection_ids', 'namespace_ids', ),
         'create_backup_schedule': ('parent', 'backup_schedule', ),
         'create_database': ('parent', 'database', 'database_id', ),
         'create_index': ('parent', 'index', ),
-        'create_user_creds': ('parent', 'user_creds', 'user_creds_id', ),
         'delete_backup': ('name', ),
         'delete_backup_schedule': ('name', ),
         'delete_database': ('name', 'etag', ),
         'delete_index': ('name', ),
-        'delete_user_creds': ('name', ),
-        'disable_user_creds': ('name', ),
-        'enable_user_creds': ('name', ),
         'export_documents': ('name', 'collection_ids', 'output_uri_prefix', 'namespace_ids', 'snapshot_time', ),
         'get_backup': ('name', ),
         'get_backup_schedule': ('name', ),
         'get_database': ('name', ),
         'get_field': ('name', ),
         'get_index': ('name', ),
-        'get_user_creds': ('name', ),
         'import_documents': ('name', 'collection_ids', 'input_uri_prefix', 'namespace_ids', ),
-        'list_backups': ('parent', 'filter', ),
+        'list_backups': ('parent', ),
         'list_backup_schedules': ('parent', ),
-        'list_databases': ('parent', 'show_deleted', ),
+        'list_databases': ('parent', ),
         'list_fields': ('parent', 'filter', 'page_size', 'page_token', ),
         'list_indexes': ('parent', 'filter', 'page_size', 'page_token', ),
-        'list_user_creds': ('parent', ),
-        'reset_user_password': ('name', ),
-        'restore_database': ('parent', 'database_id', 'backup', 'encryption_config', ),
+        'restore_database': ('parent', 'database_id', 'backup', ),
         'update_backup_schedule': ('backup_schedule', 'update_mask', ),
         'update_database': ('database', 'update_mask', ),
         'update_field': ('field', 'update_mask', ),
