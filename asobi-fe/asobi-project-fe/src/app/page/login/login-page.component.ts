@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoginFormComponent } from '../../view/parts/login-form/login-form.component';
 import { AuthService } from '../../domain/service/impl/auth.service.impl';
@@ -10,17 +10,19 @@ import { AuthService } from '../../domain/service/impl/auth.service.impl';
   templateUrl: './login-page.component.html',
   styleUrl: './login-page.component.scss'
 })
-export class LoginPageComponent implements OnInit {
+export class LoginPageComponent {
   constructor(private router: Router, private authService: AuthService) {}
 
-  async onLogin(event: { email: string }): Promise<void> {
-    await this.authService.sendEmailLink(event.email);
+  async onLogin(event: { email: string; password: string }): Promise<void> {
+    try {
+      await this.authService.signIn(event.email, event.password);
+      this.router.navigate(['/schedule']);
+    } catch {
+      alert('認証に失敗しました');
+    }
   }
 
-  async ngOnInit(): Promise<void> {
-    const signedIn = await this.authService.completeSignIn(window.location.href);
-    if (signedIn) {
-      this.router.navigate(['/schedule']);
-    }
+  onMoveToSignup(): void {
+    this.router.navigate(['/signup']);
   }
 }

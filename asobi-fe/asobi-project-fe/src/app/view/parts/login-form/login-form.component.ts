@@ -11,10 +11,16 @@ import { FormsModule } from '@angular/forms';
 })
 export class LoginFormComponent {
   email = '';
+  password = '';
 
-  @Output() login = new EventEmitter<{ email: string }>();
+  @Output() login = new EventEmitter<{ email: string; password: string }>();
+  @Output() moveToSignup = new EventEmitter<void>();
 
   onSubmit(): void {
-    this.login.emit({ email: this.email });
+    this.login.emit({ email: this.email, password: this.password });
+  }
+
+  onMoveToSignup(): void {
+    this.moveToSignup.emit();
   }
 }
